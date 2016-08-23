@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>Bar Chart</title>
+<script type="text/javascript" src = "d3.min.js"></script>
+<style  type = "text/css">
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.links line {
+  stroke: #aaa;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+
+</style>
+
+</head>
+<body>
+<script>
+	
+
+	var width = 500;
+	var height  = 300;
+
+	var svg = d3.select("body").append("svg").attr("width",width).attr("height",height);
+
+  svg.style("background","black");
+  var points = [];
+
+  svg.on("click", function(){
+
+    var coords = d3.mouse(this);
+
+    var point = d3.map();
+    point.set("x",coords[0]);
+    point.set("y",coords[1]);
+    point.set("vx",1);
+    point.set("vy",1);
+
+    points.push(point);
+
+    svg.selectAll("circle")
+    .data(points).enter().append("circle")
+    .attr("cx", function(d){ return d.get("x");})
+    .attr("cy", function(d){ return d.get("y");})
+    .attr("fill","white")
+    .attr("r",5);
+
+
+  });
+
+  var timer_elapsed = 0;
+  var timer_ret_val = false;
+
+  d3.timer(tickFn);
+
+  function tickFn(){
+
+    for(var i = 0; i<points.length; i++)
+    {
+      point= points[i];
+      var x = point.get("x"),
+      y = point.get("y"),
+      vx = point.get("vx"),
+      vy = point.get("vy");
+
+      if (x>=width || x<=0) vx*= -1;
+      if (y>=height || y<=0) vy *= -1;
+      points[i].set("vx",vx);
+      points[i].set("vy",vy);
+      points[i].set("x",x + vx);
+      points[i].set("y",y + vy);
+
+    }
+
+    svg.selectAll("circle").data(points)
+    .attr("cx", function(d){ return d.get("x");})
+    .attr("cy", function(d){ return d.get("y");});
+
+  }
+
+
+	
+</script>
+
+
+</body>
+</html>
