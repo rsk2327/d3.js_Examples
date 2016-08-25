@@ -1,0 +1,89 @@
+<html>
+<head>
+<title>Bar Chart</title>
+<script type="text/javascript" src = "d3.min.js"></script>
+<style  type = "text/css">
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.links line {
+  stroke: #aaa;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+
+</style>
+
+</head>
+<body>
+<script>
+	
+
+	var width = 500,
+	height  = 300;
+
+	var svg = d3.select("body").append("svg").attr("width",width).attr("height",height).style("background","white");
+
+  svg.call(d3.drag()
+    .on("start",dragStart)
+    .on("drag",dragged)
+    .on("end",dragEnd));
+
+  var dragPoints=[];
+
+  function dragStart(d)
+  {
+    dragPoints.push(d3.mouse(this));
+    console.log("started" + d3.mouse(this));
+  }
+
+  function dragged(d)
+  {
+    dragPoints.push(d3.mouse(this));
+    console.log(d3.mouse(this));
+  }
+
+  var liner = d3.line()
+  .x(function(d){ return d[0]; })
+  .y(function(d){ return d[1]; })
+  .curve(d3.curveBasis);
+
+  function dragEnd(d)
+  {
+
+    dragPoints.push(d3.mouse(this));
+    console.log("end" + d3.mouse(this));
+    var linePoints = [];
+
+    for(var i =0;i<dragPoints.length-1;i++)
+    {
+
+      linePoints.push([ dragPoints[i][0],dragPoints[i][1],dragPoints[i+1][0],dragPoints[i+1][1] ]);
+    }
+    console.log("length" + dragPoints.length);
+    console.log(linePoints.length);
+
+  
+    svg.append("path")
+    .data([dragPoints])
+    .attr("d",liner)
+    .attr("stroke","black")
+    .attr("stroke-width","3px")
+    .attr("fill","none");
+
+    dragPoints=[];
+  }
+
+ 
+	
+</script>
+
+
+</body>
+</html>
