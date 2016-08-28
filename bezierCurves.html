@@ -1,0 +1,180 @@
+<html>
+<head>
+<title>bezierCurves</title>
+<script type="text/javascript" src = "d3.min.js"></script>
+<style  type = "text/css">
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.links line {
+  stroke: #aaa;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+
+.d3-tip {
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+}
+
+</style>
+
+</head>
+<body>
+<h2>Bezier Curves</h2>
+<script>
+	
+
+	var width = 600,
+	height  = 600,
+  numStates = 3,
+  numObs = 3,
+  posRadius = 50, //radius of the circle on which the states are placed
+  stateData=[];
+
+  var output=[''];
+	
+  var svg = d3.select("body").append("svg").attr("width",width).attr("height",height).style("background","white");
+  
+  var pointData = [[205,205,'pt1',0],[300,205,'cp1',1],[205,300,'cp2',2],[300,300,'pt2',3]];
+
+  svg.selectAll("text").data(output)
+  .text(function(d){ return d;})
+  .enter().append("text").attr("x",10).attr("y",25);
+
+  svg.selectAll("rect").data([1])
+  .enter().append("rect")
+  .attr("x",5).attr("y",5).attr("width",593).attr("height",593)
+  .attr("stroke","black").attr("stroke-width",3).attr("fill","none");
+
+  
+
+ var links = svg.append("g");
+
+  links.selectAll().data([[pointData,"curve"],[pointData,"tangent1"],[pointData,"tangent2"]])
+  .enter().append("path")
+  .attr("stroke","black")
+  .attr("stroke-width",1)
+  .attr("fill-opacity",0.0)
+  .attr("stroke-dasharray",function(d,i){
+    if(i===0)
+    {
+      return "0";
+    }else
+    {
+      return "5,5";
+    }
+  })
+  .attr("d",positionLink);
+
+  svg.selectAll('circle').data(pointData)
+  .enter().append("circle")
+  .attr("cx",function(d){ return d[0];}).attr("cy",function(d){ return d[1];})
+  .attr("id",function(d){ return d[2];}).attr("fill",function(d,i){ if(i===1 || i===2){return "blue"; }else{ return "red";} })
+  .attr("r",5)
+  .call(d3.drag()
+    .on("start",dragStart)
+    .on("drag",dragged)
+    .on("end",dragEnd));
+    
+ 
+
+  
+  
+
+
+function positionLink(d) {
+
+var pt1 = d[0][0],
+    cp1 = d[0][1],
+    cp2 = d[0][2],
+    pt2 = d[0][3];
+
+
+if(d[1]==="curve")
+{
+  output[0] = "M"+pt1[0]+ "," + pt1[1]+" C"+cp1[0]+","+cp1[1]+" "+
+    cp2[0]+","+cp2[1]+" "+pt2[0]+","+pt2[1];
+  
+  svg.selectAll("text").data(output).text(function(e){ return e;});
+
+  console.log(output[0]);
+  return output[0];
+}
+else if(d[1]==="tangent1")
+{
+  return "M"+pt1[0]+ "," + pt1[1]+" L"+cp1[0]+","+cp1[1];
+}else
+{
+  return "M"+pt2[0]+ "," + pt2[1]+" L"+cp2[0]+","+cp2[1];
+}
+
+}
+
+function dragStart(d)
+{
+  
+  d3.select(this).attr("stroke",'black').attr("stroke-width",1);
+
+}
+
+function dragged(d)
+{
+  var coords = d3.mouse(this);
+
+  if(coords[0]<5){ pointData[d[3]][0]=5; }
+  else if(coords[0]>595){ pointData[d[3]][0]=595; }
+  else{  pointData[d[3]][0]=coords[0]; }
+
+  if(coords[1]<5){ pointData[d[3]][1]=5; }
+  else if(coords[1]>595){ pointData[d[3]][1]=595; }
+  else{  pointData[d[3]][1]=coords[1]; }
+
+  d3.select(this).attr("cx",pointData[d[3]][0]).attr("cy",pointData[d[3]][1]);  
+
+  links.selectAll("path").data([[pointData,"curve"],[pointData,"tangent1"],[pointData,"tangent2"]])
+ .attr("d",positionLink);
+
+}
+
+function dragEnd(d)
+{
+  var coords = d3.mouse(this);
+
+if(coords[0]<5){ pointData[d[3]][0]=5; }
+  else if(coords[0]>595){ pointData[d[3]][0]=595; }
+  else{  pointData[d[3]][0]=coords[0]; }
+
+  if(coords[1]<5){ pointData[d[3]][1]=5; }
+  else if(coords[1]>595){ pointData[d[3]][1]=595; }
+  else{  pointData[d[3]][1]=coords[1]; }
+
+
+ d3.select(this).attr("cx",pointData[d[3]][0]).attr("cy",pointData[d[3]][1]).attr("stroke","none");
+
+ links.selectAll("path").data([[pointData,"curve"],[pointData,"tangent1"],[pointData,"tangent2"]])
+ .attr("d",positionLink);
+
+}
+
+
+ 
+	
+</script>
+
+
+</body>
+</html>
