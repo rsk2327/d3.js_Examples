@@ -1,0 +1,225 @@
+<html style="width:100%;"">
+<head>
+<title>HMM</title>
+<script type="text/javascript" src = "d3.min.js"></script>
+<style  type = "text/css">
+@import 'https://fonts.googleapis.com/css?family=Oswald';
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.links line {
+  stroke: #aaa;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+
+.d3-tip {
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+}
+
+</style>
+
+</head>
+<body style="width:100%;margin-top:0px;margin-left:0px;margin-right:0px">
+<script>
+	
+
+	var stateHeight = 0.25,
+      obsHeight = 0.5;
+
+  var svg = d3.select("body").append("svg").attr("height","10%").attr("width","100%").attr("margin-left",0);
+  svg.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
+  svg.append("text").text("HMM").attr("fill","white").attr("x",function(d){ return svg.select("rect").node().getBBox().x + 15; })
+  .attr("y", function(d){ return svg.select("rect").node().getBBox().height/2;});
+
+  var plot = d3.select("body").append("svg").attr("width","100%").attr("height","70%").attr("id","plot");
+
+  var stateData = [{"id":0,"name":"Sunny",x:0,y:0},
+                {"id":1,"name":"Rainy",x:0,y:0},
+                {"id":2,"name":"Spring",x:0,y:0},
+                {"id":3,"name":"June",x:0,y:0},
+                {"id":4,"name":"Winter",x:0,y:0}];
+
+  var obsData = [{name:"umbrella",id:0,x:0,y:0},
+                  {name:"No umbrella",id:1,x:0,y:0},
+                  {name:"Coat",id:2,x:0,y:0}];
+
+  var numStates = stateData.length,
+      numObs = obsData.length,
+      ht = document.getElementById("plot").getBoundingClientRect().height;
+
+  function getCenter(selector)
+  {
+    var width = svg.node().getBBox().width,
+        startPos = 0.2*width;
+
+    if(selector=="states")
+    {
+        var space = 0.6*width/(numStates+1);
+        for(i=0;i<numStates;i++)
+        {
+          stateData[i].x = startPos + (i+1)*space;
+          stateData[i].y = svg.node().getBBox().height + stateHeight*ht;
+        }
+    }else
+    {
+      var space = 0.6*width/(numObs+1);
+      for(i=0;i<numObs;i++)
+      {
+        obsData[i].x = startPos + (i+1)*space;
+        obsData[i].y = svg.node().getBBox().height + obsHeight*ht;
+      }
+    }
+  }
+
+  var stateLinks = [],
+      obsLinks = [];
+
+  for(i=0;i<numStates;i++)
+  {
+    for(j=0;j<numStates;j++)
+    {
+      stateLinks.push({source:i,target:j,id:"state"+i+j});
+    }
+  }
+
+  for(i=0;i<numStates;i++)
+  {
+    for(j=0;j<numObs;j++)
+    {
+      obsLinks.push({source:i,target:j,id:"obs"+i+j});
+    }
+  }
+
+
+  getCenter("states");
+  getCenter("obs");
+
+  function positionLink(d) {
+
+  var startPos = [stateData[d.source].x,stateData[d.source].y],
+      endPos = [stateData[d.target].x,stateData[d.target].y];
+  var dx = startPos[0]-endPos[0],
+    dy = startPos[1]-endPos[1],
+    dr = Math.sqrt(dx*dx + dy*dy);
+
+  return "M" + startPos[0]+ "," + startPos[1]
+       + "A" + dr + "," + dr + " 0 0,1 "
+       + endPos[0] + "," + endPos[1];
+}
+  
+  plot.selectAll().data(stateLinks)
+  .enter().append("path").attr("stroke","black").attr("stroke-width",0.5)
+  .attr("fill-opacity",0.0).attr("d",positionLink).attr("id", function(d){
+    return "obsLink"+d.source+d.target;
+  });
+  
+
+  plot.selectAll().data(obsLinks).enter().append("line").attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;})
+  .attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;}).attr("stroke","black").attr("stroke-width",0.5).attr("stroke-dasharray","5,5");
+
+  plot.selectAll("circle").data(stateData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;}).text("S1")
+  .attr("id", function(d,i){ "state"+i}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
+  .call(d3.drag()
+    .on("start",dragStart_S)
+    .on("drag",dragged_S)
+    .on("end", dragEnd_S));
+
+  plot.selectAll().data(obsData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
+  .attr("id", function(d,i){ return "obs"+i;})
+  .call(d3.drag()
+    .on("start",dragStart_O)
+    .on("drag",dragged_O)
+    .on("end", dragEnd_O));
+
+
+  function dragStart_O(d){
+    d3.select(this).attr("opacity",0.5);
+
+  }
+
+  function dragged_O(d){
+
+    var coords = d3.mouse(this);
+
+    obsData[d.id].x = coords[0];
+    obsData[d.id].y = coords[1];
+
+    d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
+
+    plot.selectAll("line").data(obsLinks).attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;});
+    
+  }
+
+  function dragEnd_O(d){
+    d3.select(this).attr("opacity",1.0);    
+    
+  }
+
+  function dragStart_S(d){
+    d3.select(this).attr("opacity",0.5);
+
+  }
+
+  function dragged_S(d){
+
+    var coords = d3.mouse(this);
+
+    stateData[d.id].x = coords[0];
+    stateData[d.id].y = coords[1];
+
+    d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
+
+    plot.selectAll("path").data(stateLinks).attr("d",positionLink);
+    plot.selectAll("line").data(obsLinks).attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;});
+    
+  }
+
+  function dragEnd_S(d){
+    d3.select(this).attr("opacity",1.0);    
+    
+  }
+
+
+
+
+
+
+
+
+
+var textData = ["STATES","S0 : Sunny", "S1 : Rainy", "S2 : None"];
+
+plot.selectAll().data(textData).enter().append("text").text(function(d){return d;}).attr("dy",6).attr("fill","black").attr("x",15).attr("y",function(d,i){ return 50 + i*25 ;});
+
+
+//   var outside = plot.append("foreignObject").attr("width",600).attr("height",555)
+// .append("xhtml:body");
+
+// outside.html("<br><br><br> <b>STATES</b><br> S0 : Sunny <br> S1 : Rainy <br> S2 : None <br>").style("fill","gray").style("font-family","Arial").style("font-size",13);
+
+// outside.append("p").html("assaasas <br\> asasas").style("color","blue");
+
+
+  
+
+	
+</script>
+
+
+</body>
+</html>
