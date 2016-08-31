@@ -54,13 +54,40 @@
                 {"id":3,"name":"June",x:0,y:0},
                 {"id":4,"name":"Winter",x:0,y:0}];
 
-  var obsData = [{name:"umbrella",id:0,x:0,y:0},
-                  {name:"No umbrella",id:1,x:0,y:0},
-                  {name:"Coat",id:2,x:0,y:0}];
+  var obsData = [{'name':"Umbrella",'id':0,x:0,y:0},
+                  {'name':"No Umbrella",'id':1,x:0,y:0},
+                  {'name':"Coat",'id':2,x:0,y:0}];
+
+
 
   var numStates = stateData.length,
       numObs = obsData.length,
       ht = document.getElementById("plot").getBoundingClientRect().height;
+
+  var abbrText = generateText();
+
+  function generateText(selector)
+  {
+      var text = [];
+      text.push("STATES");
+      // text.push("------------");
+      for(var i =0;i<numStates;i++)
+      {
+        text.push("S"+i+" : "+stateData[i].name);
+      }
+
+      
+      text.push("");
+      text.push("OBSERVATIONS");
+      
+      for(var i =0;i<numObs;i++)
+      {
+        text.push("O"+i+" : "+obsData[i].name);
+      }
+      return text;
+  }
+
+
 
   function getCenter(selector)
   {
@@ -132,20 +159,75 @@
   plot.selectAll().data(obsLinks).enter().append("line").attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;})
   .attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;}).attr("stroke","black").attr("stroke-width",0.5).attr("stroke-dasharray","5,5");
 
-  plot.selectAll("circle").data(stateData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;}).text("S1")
-  .attr("id", function(d,i){ "state"+i}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
+  plot.selectAll("circle").data(stateData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
+  .attr("id", function(d,i){ return "state"+i;}).attr("fill","white")
   .call(d3.drag()
     .on("start",dragStart_S)
     .on("drag",dragged_S)
-    .on("end", dragEnd_S));
+    .on("end", dragEnd_S))
+  .on("mouseenter",mouseoverCircle)
+  .on("mouseleave",mouseoutCircle);
 
   plot.selectAll().data(obsData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
   .attr("id", function(d,i){ return "obs"+i;})
   .call(d3.drag()
     .on("start",dragStart_O)
     .on("drag",dragged_O)
-    .on("end", dragEnd_O));
+    .on("end", dragEnd_O))
+  .on("mouseenter",mouseoverCircle)
+  .on("mouseleave",mouseoutCircle);
+  
+  var tip = plot.append("g").attr("id","tip").attr("opacity",0.0);
+  tip.selectAll("rect").data([1]).enter().append("rect").attr("width",60).attr("height",40)
+    .attr("x",0).attr("y",0).attr("fill","black").attr("opacity",0.7);
+  tip.selectAll("text").data([1]).enter().append("text").text("outside").attr("font-size",10).attr("fill","white").attr("x",10).attr("y",20).attr("text-anchor","middle");
 
+  function mouseoverCircle1()
+  {
+    d3.select(this).attr("fill","orange");
+
+  }
+
+  function mouseoutCircle1()
+  {
+    d3.select(this).attr("fill","white");
+  }
+
+
+  function mouseoverCircle()
+  {
+    console.log("trigger");
+    d3.select(this).attr("fill","orange");    
+    var coords = d3.mouse(this);
+
+    if(this.id.indexOf("state")!=-1)
+    {
+      var coords = [stateData[this.id[5]].x,stateData[this.id[5]].y];
+      var name = stateData[this.id[5]].name;
+      var output = "State : "+name;
+      var length = 6*(output.length);
+      
+    }else
+    {
+      var coords  = [obsData[this.id[3]].x,obsData[this.id[3]].y];
+      var name = obsData[this.id[3]].name;
+      var output = "Obs : "+name;
+      var length = 6*(output.length);
+    }
+
+    plot.append("rect").attr("x",coords[0]-length/2).attr("opacity",0.0).attr("fill","black").attr("id","tipRect").attr("width",length).attr("height",30).attr("y",coords[1]+20);
+    plot.append("text").attr("x",coords[0]).attr("fill","white").attr("id","tipText").text(output).attr("y",coords[1]+40).attr("font-size",12).attr("text-anchor","middle");
+
+    plot.select("#tipRect").transition().duration(200).attr("opacity",0.7);
+  }
+
+  function mouseoutCircle()
+  {
+    console.log("triggered");
+    d3.select(this).attr("fill","white");
+    plot.selectAll("#tipRect,#tipText").remove();
+
+  }
 
   function dragStart_O(d){
     d3.select(this).attr("opacity",0.5);
@@ -202,9 +284,12 @@
 
 
 
-var textData = ["STATES","S0 : Sunny", "S1 : Rainy", "S2 : None"];
 
-plot.selectAll().data(textData).enter().append("text").text(function(d){return d;}).attr("dy",6).attr("fill","black").attr("x",15).attr("y",function(d,i){ return 50 + i*25 ;});
+
+plot.selectAll().data(abbrText).enter().append("text").text(function(d){return d;}).attr("dy",6).attr("fill","black").attr("x",15).attr("y",function(d,i){ return 50 + i*20 ;}).attr("font-size",12).attr("text-decoration",function(d){
+  if(d=="STATES" || d=="OBSERVATIONS"){ return "underline";}
+  else{ return "none";}
+});
 
 
 //   var outside = plot.append("foreignObject").attr("width",600).attr("height",555)
