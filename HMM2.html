@@ -39,7 +39,8 @@
 	
 
 	var stateHeight = 0.25,
-      obsHeight = 0.5;
+      obsHeight = 0.5
+      selected = 0;
 
   var svg = d3.select("body").append("svg").attr("height","10%").attr("width","100%").attr("margin-left",0);
   svg.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
@@ -47,6 +48,7 @@
   .attr("y", function(d){ return svg.select("rect").node().getBBox().height/2;});
 
   var plot = d3.select("body").append("svg").attr("width","100%").attr("height","70%").attr("id","plot");
+  plot.append("rect").attr("id","conatinerBox").attr("width","100%").attr("height","100%").attr("fill","white").attr("stroke","black").on("click",mouseSVGClick);
 
   var stateData = [{"id":0,"name":"Sunny",x:0,y:0},
                 {"id":1,"name":"Rainy",x:0,y:0},
@@ -151,22 +153,22 @@
   
   plot.selectAll().data(stateLinks)
   .enter().append("path").attr("stroke","black").attr("stroke-width",0.5)
-  .attr("fill-opacity",0.0).attr("d",positionLink).attr("id", function(d){
-    return "obsLink"+d.source+d.target;
-  });
+  .attr("fill-opacity",0.0).attr("d",positionLink).attr("id",function(d){ return d.id;});
   
 
   plot.selectAll().data(obsLinks).enter().append("line").attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;})
-  .attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;}).attr("stroke","black").attr("stroke-width",0.5).attr("stroke-dasharray","5,5");
+  .attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;}).attr("stroke","black").attr("stroke-width",0.5).attr("stroke-dasharray","5,5")
+  .attr("id",function(d){ return d.id;});
 
   plot.selectAll("circle").data(stateData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
-  .attr("id", function(d,i){ return "state"+i;}).attr("fill","white")
+  .attr("id", function(d,i){ return "state"+i;}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
   .call(d3.drag()
     .on("start",dragStart_S)
     .on("drag",dragged_S)
     .on("end", dragEnd_S))
   .on("mouseenter",mouseoverCircle)
-  .on("mouseleave",mouseoutCircle);
+  .on("mouseleave",mouseoutCircle)
+  .on("click",mouseCircleClick);
 
   plot.selectAll().data(obsData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
   .attr("id", function(d,i){ return "obs"+i;})
@@ -175,29 +177,78 @@
     .on("drag",dragged_O)
     .on("end", dragEnd_O))
   .on("mouseenter",mouseoverCircle)
-  .on("mouseleave",mouseoutCircle);
+  .on("mouseleave",mouseoutCircle)
+  .on("click",mouseCircleClick);
   
   var tip = plot.append("g").attr("id","tip").attr("opacity",0.0);
   tip.selectAll("rect").data([1]).enter().append("rect").attr("width",60).attr("height",40)
     .attr("x",0).attr("y",0).attr("fill","black").attr("opacity",0.7);
   tip.selectAll("text").data([1]).enter().append("text").text("outside").attr("font-size",10).attr("fill","white").attr("x",10).attr("y",20).attr("text-anchor","middle");
 
-  function mouseoverCircle1()
-  {
-    d3.select(this).attr("fill","orange");
 
+
+  function selectTextGen(id)
+  {
+    if(id.indexOf("state")!=-1)
+    {
+    //State node
+    var text='',
+        stateID = id[5];
+
+    for(i=0;i<numStates;i++)
+    {
+      text = text + "#state"+stateID+i+",";
+    }
+
+    for(i=0;i<numObs-1;i++)
+    {
+      text = text + "#obs"+stateID+i+",";
+    }
+    text = text + "#obs"+stateID+(numObs-1);
+
+    return text;
+
+    }else
+    {
+    //Obs node
+
+    }
   }
 
-  function mouseoutCircle1()
-  {
-    d3.select(this).attr("fill","white");
+
+  function mouseSVGClick(d){
+ 
+      plot.selectAll("path,circle,line").attr("opacity",1.0);
+      selected = 0;
+   
+    
   }
 
+  function mouseCircleClick(d)
+  {
+    
+    if(selected==0)
+    {
+      selected=1;
+      
+    plot.selectAll("path,circle,line").attr("opacity",0.1);
+
+    selectText = selectTextGen(this.id);
+    
+
+    plot.selectAll(selectText+",#"+this.id).attr("opacity",1.0);
+
+    }else
+    {
+      mouseSVGClick(d);
+    }
+    
+  }
 
   function mouseoverCircle()
   {
-    console.log("trigger");
-    d3.select(this).attr("fill","orange");    
+
+    d3.select(this).attr("fill","orange").attr("stroke","none");    
     var coords = d3.mouse(this);
 
     if(this.id.indexOf("state")!=-1)
@@ -219,23 +270,36 @@
     plot.append("text").attr("x",coords[0]).attr("fill","white").attr("id","tipText").text(output).attr("y",coords[1]+40).attr("font-size",12).attr("text-anchor","middle");
 
     plot.select("#tipRect").transition().duration(200).attr("opacity",0.7);
+
   }
 
   function mouseoutCircle()
   {
     console.log("triggered");
-    d3.select(this).attr("fill","white");
+    
     plot.selectAll("#tipRect,#tipText").remove();
 
+    if(this.id.indexOf("state")!=-1)
+    {
+      d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");
+      
+      
+    }else
+    {
+      d3.select(this).attr("fill","black");
+    }
   }
 
+
+
   function dragStart_O(d){
+    if(selected==1){return;}
     d3.select(this).attr("opacity",0.5);
 
   }
 
   function dragged_O(d){
-
+    if(selected==1){return;}
     var coords = d3.mouse(this);
 
     obsData[d.id].x = coords[0];
@@ -248,17 +312,19 @@
   }
 
   function dragEnd_O(d){
+    if(selected==1){return;}
     d3.select(this).attr("opacity",1.0);    
     
   }
 
   function dragStart_S(d){
+    if(selected==1){return;}
     d3.select(this).attr("opacity",0.5);
 
   }
 
   function dragged_S(d){
-
+    if(selected==1){return;}
     var coords = d3.mouse(this);
 
     stateData[d.id].x = coords[0];
@@ -272,6 +338,7 @@
   }
 
   function dragEnd_S(d){
+    if(selected==1){return;}
     d3.select(this).attr("opacity",1.0);    
     
   }
