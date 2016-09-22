@@ -1,0 +1,85 @@
+<html>
+<head>
+<title>Bar Chart</title>
+<script type="text/javascript" src = "d3.min.js"></script>
+<style  type = "text/css">
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.links line {
+  stroke: #aaa;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+
+</style>
+
+</head>
+<body>
+<script>
+	
+
+	var width = 1000;
+	var height  = 600;
+
+	var svg = d3.select("body").append("svg").attr("width",width).attr("height",height);
+
+  svg.style("background","white");
+  var nodeData = [{'x':400,'y':150,'id':1}];
+
+  var simulation = d3.forceSimulation(nodeData).force('tension',d3.forceX(250).strength(0.1));
+
+  var node = svg.selectAll("circle").data(nodeData).enter().append("circle")
+  .attr("r",30).attr("cx",450).attr("cy",height/2)
+  .attr("fill","black").attr("opacity",0.5)
+  .call(d3.drag()
+    .on("start",dragstarted)
+    .on("drag",dragged)
+    .on("end",dragended));
+  
+  function dragstarted()
+  { 
+    console.log(simulation.alpha());
+      simulation.alphaTarget(0.5).restart();
+  }
+
+  function dragged(d)
+  {
+
+    d3.select(this).attr("cx",d3.event.x).attr("cy",d3.event.y);
+   // d.x = d3.event.x;
+    //d.y = d3.event.y;
+  }
+
+  function dragended(d)
+  {
+
+    d.x = d3.event.x;
+    d.y = d3.event.y;
+    simulation.alphaTarget(0.1);
+  }
+
+  function ticked(){
+
+    console.log(simulation.alpha());
+    node.attr("cx", function(d){ return d.x;})
+    .attr("cy", function(d){ return d.y;})
+
+  }
+
+  simulation.nodes(nodeData);
+  simulation.on("tick",ticked);
+
+
+	
+</script>
+
+
+</body>
+</html>
