@@ -25,56 +25,55 @@
 <script>
 	
 
-	var width = 1000;
-	var height  = 600;
+	var width = 1000,
+    height = 600;
 
-	var svg = d3.select("body").append("svg").attr("width",width).attr("height",height);
+var svg = d3.select("body").append("svg").attr("width",width)
+            .attr("height",height);
 
-  svg.style("background","white");
-  var nodeData = [{'x':400,'y':150,'id':1}];
+var nodeData = [{'x':225,'y':100,'id':'First'}];
+ 
+var simulation = d3.forceSimulation(nodeData);
 
-  var simulation = d3.forceSimulation(nodeData).force('tension',d3.forceX(250).strength(0.1));
+simulation.force("xAxis",d3.forceX(width/2))
+          .force("yAxis",d3.forceY(height/2));
 
-  var node = svg.selectAll("circle").data(nodeData).enter().append("circle")
-  .attr("r",30).attr("cx",450).attr("cy",height/2)
-  .attr("fill","black").attr("opacity",0.5)
-  .call(d3.drag()
-    .on("start",dragstarted)
-    .on("drag",dragged)
-    .on("end",dragended));
-  
-  function dragstarted()
-  { 
-    console.log(simulation.alpha());
-      simulation.alphaTarget(0.5).restart();
-  }
+ var node = svg.selectAll("circle").data(nodeData)
+            .enter().append("circle")
+            .attr("r",30).attr("cx",width/2).attr("cy",height/2)
+            .attr("fill","black").attr("opacity",0.5)
+            .call(d3.drag()
+            .on("start",dragstarted)
+            .on("drag",dragged)
+            .on("end",dragended));
+ 
+ function dragstarted(d)
+ { 
+    simulation.restart();
+    simulation.alpha(1.0);
+    d.fx = d.x;
+    d.fy = d.y;
+ }
 
-  function dragged(d)
-  {
+ function dragged(d)
+ {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+ }
 
-    d3.select(this).attr("cx",d3.event.x).attr("cy",d3.event.y);
-   // d.x = d3.event.x;
-    //d.y = d3.event.y;
-  }
-
-  function dragended(d)
-  {
-
-    d.x = d3.event.x;
-    d.y = d3.event.y;
+ function dragended(d)
+ {
+    d.fx = null;
+    d.fy = null;
     simulation.alphaTarget(0.1);
-  }
+ }
 
-  function ticked(){
+ function ticked(){
+     node.attr("cx", function(d){ return d.x;})
+         .attr("cy", function(d){ return d.y;})
+ }
 
-    console.log(simulation.alpha());
-    node.attr("cx", function(d){ return d.x;})
-    .attr("cy", function(d){ return d.y;})
-
-  }
-
-  simulation.nodes(nodeData);
-  simulation.on("tick",ticked);
+ simulation.on("tick",ticked);
 
 
 	
