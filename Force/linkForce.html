@@ -57,7 +57,7 @@ var linkForce  = d3.forceLink(nodeLinks).distance(dist).strength(2);
  
 
 
-var simulation = d3.forceSimulation(nodeData).alphaDecay(0.01).force("attractForce",linkForce);
+var simulation = d3.forceSimulation(nodeData).alphaDecay(0.01).force("linkForce",linkForce);
 
           
 
