@@ -1,0 +1,180 @@
+<html style="width:100%;"">
+<head>
+<title>HMM</title>
+<script type="text/javascript" src = "d3.min.js"></script>
+<style  type = "text/css">
+@import 'https://fonts.googleapis.com/css?family=Oswald';
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+.links line {
+  stroke: #aaa;
+}
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+.d3-tip {
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+  
+  
+  table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+
+th, td {
+    text-align: center;
+	padding : 5px 10px 5px 10px;
+	
+	
+}
+
+td {
+     border: 1px solid black;
+	 width : 100;
+}
+
+#divBox{
+padding : 200px;
+}
+}
+</style>
+</head>
+<body style="width:100%;margin-top:0px;margin-left:0px;margin-right:0px">
+<script>
+	
+	var stateData = [{"id":0,"name":"Sunny",x:0,y:0},
+                {"id":1,"name":"Rainy",x:0,y:0},
+                {"id":2,"name":"Spring",x:0,y:0},
+                {"id":3,"name":"June",x:0,y:0},
+                {"id":4,"name":"Winter",x:0,y:0}];
+	var obsData = [{'name':"Umbrella",'id':0,x:0,y:0},
+                  {'name':"No Umbrella",'id':1,x:0,y:0},
+                  {'name':"Coat",'id':2,x:0,y:0}];
+	
+	
+	var stateHeight = 0.25,
+      obsHeight = 0.5
+      selected = 0,
+	  splitRatio = 20;
+
+//// Header 	  
+  var header = d3.select("body").append("svg").attr("height","10%").attr("width","100%").attr("margin-left",0);
+  
+  header.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
+  header.append("text").text("HMM").attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
+  .attr("y", function(d){ return header.select("rect").node().getBBox().height/2;});
+  
+  
+  
+//// Content  
+  var content = d3.select("body").append("svg").attr("width","100%").attr("height","70%").attr("id","content");
+  
+  content.append("rect").attr("id","plot").attr("width",(100-splitRatio)+"%").attr("height","100%")
+  .attr("x",document.getElementById("content").clientWidth*(splitRatio/100))
+  .attr("fill","white");
+  //.attr("stroke","black");
+  //.on("click",mouseSVGClick);
+  
+  content.append("rect").attr("id","summary").attr("width",splitRatio+"%").attr("height","100%")
+		.attr("fill","white");
+  
+/// Footer  		
+	
+	var footer = d3.select("body").append("svg").attr("width","100%")
+            .attr("height","20%").attr("id","footer").attr("margin-left",0);
+	//footer.append('foreignObject').attr("x",100).attr("y",0).append("xhtml:body").attr("id","footerBox");	
+	footer.append('foreignObject').attr("x",200).attr("y",0).append("xhtml:body").attr("id","footerBox");
+  
+  
+function createTable(nrow,ncol,containerName)
+{
+  var table = document.createElement("table");
+  table.id = "tableID";
+  //table.style.padding = '0px 0px 0px 0px';
+  table.style.borderSpacing = 0;
+  table.style.borderCollapse = "collapse";
+  //table.style.border = "0.5px black solid";
+  table.style.width=400;
+
+  for(var i =0;i<nrow;i++)
+  {
+    var row = table.insertRow(0);
+    row.id = "row"+i;
+	
+	if(i%2==0){ row.style.background = "#F3EFEF";} //row color
+	else{ row.style.background = "white"; }
+	
+	
+    for(var j =0;j<ncol;j++)
+    {
+      var col = row.insertCell();
+      col.innerHTML = "Cell "+i+" "+j;
+      col.id = "Cell "+i+" "+j;
+	  col.align="center";
+	  col.style.width=80;
+    }
+  }
+  
+  var row = table.insertRow(0);
+  row.style.background ="black";
+  for(j=0;j<ncol;j++)
+  {
+	var col = row.insertCell();
+      col.innerHTML = "Head "+i+" "+j;
+      col.id = "Head "+i+" "+j;
+	  col.align="center";
+	  col.style.width=80;
+	  col.style.color  = "white";
+	  col.style.borderRight="0.5px white solid";
+  }
+  col.style.borderRight = "0px white solid";
+
+  
+  var divbox = document.getElementById(containerName);
+  divbox.appendChild(table);
+}
+
+createTable(3,4,'footerBox');
+
+function cleanTable(tableID)
+{
+	var table = document.getElementById(tableID),
+		nrow = table.rows.length;
+	
+	document.getElementById("Head "+ (nrow-1) + " 0").style.background="white";
+	
+	for(i=0;i<nrow-1;i++)
+	{
+		var cell = document.getElementById("Cell "+i+" 0");
+		cell.style.color = "white";
+		cell.style.background = "black";
+		cell.style.borderBottom  = "0.5px white solid";
+	}
+	cell.style.borderTop  = "0px white solid";
+
+}
+
+cleanTable("tableID");
+  
+  
+
+	
+</script>
+
+
+</body>
+</html>
