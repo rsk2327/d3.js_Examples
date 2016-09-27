@@ -1,0 +1,93 @@
+<html>
+<head>
+<title>linkForce</title>
+<script type="text/javascript" src = "https://d3js.org/d3.v4.min.js"></script>
+<style  type = "text/css">
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.links line {
+  stroke: #aaa;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+
+table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+
+th, td {
+    text-align: center;
+}
+
+td {
+     border: 1px solid black;
+}
+
+</style>
+
+</head>
+<body>
+<script>
+  
+
+  var width = 1000,
+    height = 600;
+
+var svg = d3.select("body").append("svg").attr("width",width)
+            .attr("height",height).attr("id","svgBody").attr("fill","black");
+
+var divBox = d3.select("body").append("div").attr("id","divBox");
+
+function createTable(nrow,ncol)
+{
+  var table = document.createElement("table");
+  table.id = "tableID";
+  table.style.padding = 20;
+  table.style.borderSpacing = 50;
+
+
+  for(var i =0;i<nrow;i++)
+  {
+    var row = table.insertRow(0);
+    row.id = "row"+i;
+
+    for(var j =0;j<ncol;j++)
+    {
+      var col = row.insertCell();
+      col.innerHTML = "Cell "+i+" "+j;
+      col.id = "Cell "+i+" "+j;
+      col.onclick = function()
+      {
+        this.innerHTML = "OUT";
+      }
+    }
+
+  }
+
+  var divbox = document.getElementById('divBox');
+  divbox.appendChild(table);
+  // divBox.appendChild(table);
+
+}
+
+createTable(4,5);
+
+document.getElementById("Cell 0 0").innerHTML = "New Text";
+
+
+  
+</script>
+
+
+</body>
+</html>
