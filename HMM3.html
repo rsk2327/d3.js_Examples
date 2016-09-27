@@ -69,7 +69,7 @@ padding : 200px;
 	var stateHeight = 0.25,
       obsHeight = 0.5
       selected = 0,
-	  splitRatio = 20;
+	  splitRatio = 30;
 
 //// Header 	  
   var header = d3.select("body").append("svg").attr("height","10%").attr("width","100%").attr("margin-left",0);
@@ -80,17 +80,18 @@ padding : 200px;
   
   
   
-//// Content  
-  var content = d3.select("body").append("svg").attr("width","100%").attr("height","70%").attr("id","content");
+//// Summary & Plot 
+  var summary = d3.select("body").append("svg").attr("width","30%").attr("height","70%").attr("id","summary");
   
-  content.append("rect").attr("id","plot").attr("width",(100-splitRatio)+"%").attr("height","100%")
+  var plot = content.append("rect").attr("id","plot").attr("width",(100-splitRatio)+"%").attr("height","100%")
   .attr("x",document.getElementById("content").clientWidth*(splitRatio/100))
-  .attr("fill","white");
-  //.attr("stroke","black");
+  .attr("fill","white").attr("stroke","black");
   //.on("click",mouseSVGClick);
   
-  content.append("rect").attr("id","summary").attr("width",splitRatio+"%").attr("height","100%")
-		.attr("fill","white");
+  //var summary = content.append("rect").attr("id","summary").attr("width",splitRatio+"%").attr("height","100%")
+	//	.attr("fill","none");
+content.append("svg").attr("id","summarySVG").attr('width',splitRatio+"%").attr("height","100%")
+		.append('foreignObject').attr("x",0).attr("y",0).append("xhtml:body").attr("id","dataBox");
   
 /// Footer  		
 	
@@ -98,22 +99,28 @@ padding : 200px;
             .attr("height","20%").attr("id","footer").attr("margin-left",0);
 	//footer.append('foreignObject').attr("x",100).attr("y",0).append("xhtml:body").attr("id","footerBox");	
 	footer.append('foreignObject').attr("x",200).attr("y",0).append("xhtml:body").attr("id","footerBox");
+	
+//// Text
+
+var descrip = d3.select("body").append("svg").attr("width","100%")
+				.attr("height","100%").attr("id","footer").attr("margin-left",0);
+descrip.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
   
   
-function createTable(nrow,ncol,containerName)
+function createTable(nrow,ncol,containerName,width,prefix)
 {
   var table = document.createElement("table");
-  table.id = "tableID";
+  table.id = prefix+"tableID";
   //table.style.padding = '0px 0px 0px 0px';
   table.style.borderSpacing = 0;
   table.style.borderCollapse = "collapse";
   //table.style.border = "0.5px black solid";
-  table.style.width=400;
+  table.style.width=width;
 
   for(var i =0;i<nrow;i++)
   {
     var row = table.insertRow(0);
-    row.id = "row"+i;
+    row.id = prefix+"row"+i;
 	
 	if(i%2==0){ row.style.background = "#F3EFEF";} //row color
 	else{ row.style.background = "white"; }
@@ -122,8 +129,8 @@ function createTable(nrow,ncol,containerName)
     for(var j =0;j<ncol;j++)
     {
       var col = row.insertCell();
-      col.innerHTML = "Cell "+i+" "+j;
-      col.id = "Cell "+i+" "+j;
+      col.innerHTML = prefix+"Cell "+i+" "+j;
+      col.id = prefix+"Cell "+i+" "+j;
 	  col.align="center";
 	  col.style.width=80;
     }
@@ -134,8 +141,8 @@ function createTable(nrow,ncol,containerName)
   for(j=0;j<ncol;j++)
   {
 	var col = row.insertCell();
-      col.innerHTML = "Head "+i+" "+j;
-      col.id = "Head "+i+" "+j;
+      col.innerHTML = prefix+"Head "+i+" "+j;
+      col.id = prefix+"Head "+i+" "+j;
 	  col.align="center";
 	  col.style.width=80;
 	  col.style.color  = "white";
@@ -148,18 +155,19 @@ function createTable(nrow,ncol,containerName)
   divbox.appendChild(table);
 }
 
-createTable(3,4,'footerBox');
+createTable(3,4,'footerBox',400,"a");
+createTable(2,1,'dataBox',150,"b");
 
-function cleanTable(tableID)
+function cleanTable(tableID,prefix)
 {
 	var table = document.getElementById(tableID),
 		nrow = table.rows.length;
 	
-	document.getElementById("Head "+ (nrow-1) + " 0").style.background="white";
+	document.getElementById(prefix+"Head "+ (nrow-1) + " 0").style.background="white";
 	
 	for(i=0;i<nrow-1;i++)
 	{
-		var cell = document.getElementById("Cell "+i+" 0");
+		var cell = document.getElementById(prefix+"Cell "+i+" 0");
 		cell.style.color = "white";
 		cell.style.background = "black";
 		cell.style.borderBottom  = "0.5px white solid";
@@ -168,7 +176,7 @@ function cleanTable(tableID)
 
 }
 
-cleanTable("tableID");
+cleanTable("atableID","a");
   
   
 
