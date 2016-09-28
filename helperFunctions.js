@@ -213,3 +213,122 @@ function generateText(selector)
     d3.select(this).attr("opacity",1.0);    
     
   }
+
+
+function createTable(nrow,ncol,containerName,tableName,width,height,prefix)
+{
+  var table = document.createElement("table");
+  table.id = tableName;
+  table.style.borderSpacing = 0;
+  table.style.borderCollapse = "collapse";
+  table.style.width=width;
+  table.style.height = height;
+
+    //Adding rows
+  for(var i =0;i<nrow;i++)
+  {
+    var row = table.insertRow(0);
+    row.id = prefix+"row"+i;
+  
+  if(i%2==0){ row.style.background = "#F3EFEF";} //row color
+  else{ row.style.background = "white"; }
+  
+  
+    for(var j =0;j<ncol;j++)
+    {
+      var col = row.insertCell();
+      col.innerHTML = prefix+"Cell "+i+" "+j;
+      col.id = prefix+"Cell "+i+" "+j;
+    col.align="center";
+    col.style.width=80;
+    }
+  }
+  
+  // Adding header
+  var row = table.insertRow(0);
+  row.style.background ="black";
+  for(j=0;j<ncol;j++)
+  {
+  var col = row.insertCell();
+      col.innerHTML = prefix+"Head "+i+" "+j;
+      col.id = prefix+"Head "+i+" "+j;
+    col.align="center";
+    col.style.width=80;
+    col.style.color  = "white";
+    col.style.borderRight="1px white solid";
+  }
+  col.style.borderRight = "0px white solid";
+
+  
+  var divbox = document.getElementById(containerName);
+  divbox.appendChild(table);
+}
+
+function createTable2(nrow,ncol,containerName,tableName,width,height,prefix)
+{
+  var table = document.createElement("table");
+  table.id = tableName;
+ // table.style.borderSpacing = 20;
+  table.style.borderCollapse = "collapse";
+  table.style.width=width;
+  table.style.height = height;
+  table.style.margin = "20px 20px 60px 20px";
+  table.style.padding = "0px 30px 0px 0px ";
+
+    //Adding rows
+  for(var i =0;i<nrow;i++)
+  {
+    var row = table.insertRow(0);
+    row.id = prefix+"row"+i;
+  
+  if(i%2==0){ row.style.background = "#F3EFEF";} //row color
+  else{ row.style.background = "white"; }
+  
+  
+    for(var j =0;j<ncol;j++)
+    {
+      var col = row.insertCell();
+      col.innerHTML = prefix+"Cell "+i+" "+j;
+      col.id = prefix+"Cell "+i+" "+j;
+    col.align="center";
+    col.style.width=80;
+    }
+  }
+  
+  // Adding header
+  var row = table.insertRow(0);
+  row.style.background ="black";
+  for(j=0;j<ncol;j++)
+  {
+  var col = row.insertCell();
+      col.innerHTML = prefix+"Head "+i+" "+j;
+      col.id = prefix+"Head "+i+" "+j;
+    col.align="center";
+    col.style.width=80;
+    col.style.color  = "white";
+    col.style.borderRight="1px white solid";
+  }
+  col.style.borderRight = "0px white solid";
+
+  
+  var divbox = document.getElementById(containerName);
+  divbox.appendChild(table);
+}
+
+function cleanTable(tableID,prefix)
+{
+  var table = document.getElementById(tableID),
+    nrow = table.rows.length;
+  
+  document.getElementById(prefix+"Head "+ (nrow-1) + " 0").style.background="white";
+  
+  for(i=0;i<nrow-1;i++)
+  {
+    var cell = document.getElementById(prefix+"Cell "+i+" 0");
+    cell.style.color = "white";
+    cell.style.background = "black";
+    cell.style.borderBottom  = "1px white solid";
+  }
+  cell.style.borderTop  = "0px white solid";
+
+}
