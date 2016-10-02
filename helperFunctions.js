@@ -152,6 +152,8 @@ function dragEnd_O(d){
 }
 
 function dragStart_S(d){
+	
+	
     if(selected==1){return;}
     d3.select(this).attr("opacity",0.5);
 }
@@ -285,7 +287,7 @@ function fillData(tableName,data){
     //state names
     for(i=1;i<numStates+1;i++)
     {
-      document.getElementById("emCell "+(numStates-i)+" "+0).innerHTML = "O"+stateData[i-1].id;
+      document.getElementById("emCell "+(numStates-i)+" "+0).innerHTML = "S"+stateData[i-1].id;
     }
     
     //prob values
@@ -373,7 +375,7 @@ function getCenter2(selector){
       stateData[i].x = startPos + (i+1)*space;
       stateData[i].y = header.node().getBBox().height + stateHeight*plotHeight;
      }
-  }else
+  }else if(selector=="obs")
   {
     var space = 0.8*plotWidth/(numObs+1);
      for(i=0;i<numObs;i++)
@@ -381,6 +383,33 @@ function getCenter2(selector){
       obsData[i].x = startPos + (i+1)*space;
       obsData[i].y = header.node().getBBox().height + obsHeight*plotHeight;
      }
+  }else
+  {
+	var space = 0.8*plotWidth/(2);
+	startData[0].x  = startPos + space;
+	startData[0].y  = header.node().getBBox().height + startHeight*plotHeight;
   }
 }
-  
+
+function selectTextGen(id)
+  {
+    if(id.indexOf("state")!=-1)
+    {
+    //State node
+    var text='',
+        stateID = id[5];
+    for(i=0;i<numStates;i++)
+    {
+      text = text + "#state"+stateID+i+",";
+    }
+    for(i=0;i<numObs-1;i++)
+    {
+      text = text + "#obs"+stateID+i+",";
+    }
+    text = text + "#obs"+stateID+(numObs-1);
+    return text;
+    }else
+    {
+    //Obs node
+    }
+}
