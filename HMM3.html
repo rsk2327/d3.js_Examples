@@ -57,15 +57,15 @@ padding : 200px;
 <body style="width:100%;margin-top:0px;margin-left:0px;margin-right:0px">
 <script>
   
-  var stateData = [{"id":0,"name":"Sunny",x:0,y:0},
-                {"id":1,"name":"Rainy",x:0,y:0},
-                {"id":2,"name":"Spring",x:0,y:0},
-                {"id":3,"name":"June",x:0,y:0},
-                {"id":4,"name":"Winter",x:0,y:0}];
-  var obsData = [{'name':"Umbrella",'id':0,x:0,y:0},
-                  {'name':"No Umbrella",'id':1,x:0,y:0},
-                  {'name':"Coat",'id':2,x:0,y:0}];
-  var startData = [{'name':"Umbrella",'id':0,x:0,y:0}];
+  var stateData = [{"id":0,"name":"Sunny",x:0,y:0,'type':"state"},
+                {"id":1,"name":"Rainy",x:0,y:0,'type':"state"},
+                {"id":2,"name":"Spring",x:0,y:0,'type':"state"},
+                {"id":3,"name":"June",x:0,y:0,'type':"state"},
+                {"id":4,"name":"Winter",x:0,y:0,'type':"state"}];
+  var obsData = [{'name':"Umbrella",'id':0,x:0,y:0,'type':"obs"},
+                  {'name':"No Umbrella",'id':1,x:0,y:0,'type':"obs"},
+                  {'name':"Coat",'id':2,x:0,y:0,'type':"obs"}];
+  var startData = [{'name':"Start Node",'id':0,x:0,y:0,'type':"start node"}];
           
   var obsSeq = [0,1,2,1,2,1],
     obsLength = obsSeq.length;
@@ -145,7 +145,8 @@ var seqTable = document.getElementById("seqTable"), emissionTable = document.get
   transitionTable = document.getElementById("transitionTable");
   
   
-//HMM plot
+////////// LINKS AND NODES //////////////////
+
 getCenter2("states");
 getCenter2("obs");
 getCenter2("startNode");
@@ -169,35 +170,38 @@ for(i=0;i<numStates;i++)
 
 for(i=0;i<numStates;i++)
 {
-   startLinks.push({source:"startNode",target:i,id:"start"+i});
+   startLinks.push({source:0,target:i,id:"start"+i});
 }
 
-
-// Adding links
+// state links
 plot.selectAll().data(stateLinks)
   .enter().append("path").attr("stroke","black").attr("stroke-width",0.5)
   .attr("fill-opacity",0.0).attr("d",positionLink).attr("id",function(d){ return d.id;});
-  
+
+// obs links
 plot.selectAll().data(obsLinks).enter().append("line").attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;})
   .attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;}).attr("stroke","black").attr("stroke-width",0.5).attr("stroke-dasharray","5,5")
   .attr("id",function(d){ return d.id;});
-  
-plot.selectAll().data(startLinks).enter().append("line")  
+
+// start node links
+plot.selectAll().data(startLinks).enter().append("line").attr("x1",function(d){ return stateData[d.target].x ;}).attr("y1",function(d){ return stateData[d.target].y;})
+  .attr("x2",function(d){ return startData[d.source].x; }).attr("y2",function(d){ return startData[d.source].y ;}).attr("stroke","black").attr("stroke-width",0.5)
+  .attr("id",function(d){ return d.id;});
 
  //Adding node circles
 plot.selectAll().data(startData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
  .attr("id", function(d,i){ return "startNode";}).attr("fill","white").attr("stroke-width",5).attr("stroke","orange")
  .call(d3.drag()
-    .on("start",dragStart_S)
-    .on("drag",dragged_S)
-    .on("end", dragEnd_S));
+    .on("start",dragStart)
+    .on("drag",dragged)
+    .on("end", dragEnd));
 	
 plot.selectAll().data(stateData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
   .attr("id", function(d,i){ return "state"+i;}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
   .call(d3.drag()
-    .on("start",dragStart_S)
-    .on("drag",dragged_S)
-    .on("end", dragEnd_S))
+    .on("start",dragStart)
+    .on("drag",dragged)
+    .on("end", dragEnd))
   .on("mouseenter",mouseoverCircle)
   .on("mouseleave",mouseoutCircle)
   .on("click",mouseCircleClick);
@@ -205,18 +209,24 @@ plot.selectAll().data(stateData).enter().append("circle").attr("r",20).attr("cx"
 plot.selectAll().data(obsData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
   .attr("id", function(d,i){ return "obs"+i;})
   .call(d3.drag()
-    .on("start",dragStart_O)
-    .on("drag",dragged_O)
-    .on("end", dragEnd_O))
+    .on("start",dragStart)
+    .on("drag",dragged)
+    .on("end", dragEnd))
   .on("mouseenter",mouseoverCircle)
   .on("mouseleave",mouseoutCircle)
   .on("click",mouseCircleClick);
+
 var tip = plot.append("g").attr("id","tip").attr("opacity",0.0);
 tip.selectAll("rect").data([1]).enter().append("rect").attr("width",60).attr("height",40)
     .attr("x",0).attr("y",0).attr("fill","black").attr("opacity",0.7);
 tip.selectAll("text").data([1]).enter().append("text").text("outside").attr("font-size",10).attr("fill","white").attr("x",10).attr("y",20).attr("text-anchor","middle");
 
-var internalClock = d3.interval(tickFn,animationSpeed);
+
+
+
+///////// ANIMATION ///////////
+
+//var internalClock = d3.interval(tickFn,animationSpeed);
 
 
 var currRow=1,

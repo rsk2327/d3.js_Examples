@@ -1,0 +1,87 @@
+<html>
+<head>
+<title>linkForce</title>
+<script type="text/javascript" src = "https://d3js.org/d3.v4.min.js"></script>
+<style  type = "text/css">
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.links line {
+  stroke: #aaa;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+
+table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+
+th, td {
+    text-align: center;
+}
+
+td {
+     border: 1px solid black;
+}
+
+</style>
+
+</head>
+<body>
+<script>
+  
+
+  var width = 1000,
+    height = 600;
+
+var svg = d3.select("body").append("svg");
+
+
+
+var e = d3.interval(tickFn,5000);
+
+var selector=0;
+
+function tickFn()
+{
+  console.log("entered tickFn at"+ d3.now());
+
+if(selector==0)
+{
+  selector = selector +1;
+  e.restart(tickFn,2000); 
+}
+else if(selector ==1)
+{
+  selector = selector +1;
+  e.restart(tickFn,4000);
+}else
+{
+  selector=0;
+  e.restart(tickFn,3000);
+}
+
+}
+
+
+
+
+
+
+
+
+  
+</script>
+
+
+</body>
+</html>

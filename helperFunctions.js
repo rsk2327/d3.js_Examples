@@ -73,6 +73,7 @@ function selectTextGen(id){
     }
 }
 
+//// MOSUE FUNCTIONS
 function mouseSVGClick(d){
  
       plot.selectAll("path,circle,line").attr("opacity",1.0);
@@ -132,47 +133,65 @@ function mouseoutCircle(){
     }
 }
 
-function dragStart_O(d){
+
+//// DRAG FUNCTIONS
+function dragStart(d){
     if(selected==1){return;}
     d3.select(this).attr("opacity",0.5);
 }
 
-function dragged_O(d){
+function dragged(d){
     if(selected==1){return;}
     var coords = d3.mouse(this);
-    obsData[d.id].x = coords[0];
-    obsData[d.id].y = coords[1];
-    d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
-    plot.selectAll("line").data(obsLinks).attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;});
+
+    if(d.type == "obs")
+    {
+      obsData[d.id].x = coords[0];
+      obsData[d.id].y = coords[1];
+      d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
+      plot.selectAll("line").data(obsLinks).attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;});
+    }else if (d.type =="state")
+    {
+      stateData[d.id].x = coords[0];
+      stateData[d.id].y = coords[1];
+      d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
+      plot.selectAll("path").data(stateLinks).attr("d",positionLink);
+      plot.selectAll("line").data(obsLinks).attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;});
+      plot.selectAll(selectStartLines("startNode")).data(startLinks).attr("x1",function(d){ return stateData[d.target].x; })
+                                                                    .attr("y1",function(d){ return stateData[d.target].y; });
+    }else
+    {
+      startData[d.id].x = coords[0];
+      startData[d.id].y = coords[1];
+      d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
+      plot.selectAll(selectStartLines("startNode")).data(startLinks).attr("x2",function(d){ return startData[d.source].x ;}).attr("y2",function(d){ return startData[d.source].y ;});
+
+    }
+    
 }
 
-function dragEnd_O(d){
+function dragEnd(d){
     if(selected==1){return;}
     d3.select(this).attr("opacity",1.0);    
 }
 
-function dragStart_S(d){
-	
-	
-    if(selected==1){return;}
-    d3.select(this).attr("opacity",0.5);
-}
-
-function dragged_S(d){
-    if(selected==1){return;}
-    var coords = d3.mouse(this);
-    stateData[d.id].x = coords[0];
-    stateData[d.id].y = coords[1];
-    d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
-    plot.selectAll("path").data(stateLinks).attr("d",positionLink);
-    plot.selectAll("line").data(obsLinks).attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;});
-}
-
-function dragEnd_S(d){
-    if(selected==1){return;}
-    d3.select(this).attr("opacity",1.0);    
-}  
+function selectStartLines(selector)
+{
   
+  if(selector == "startNode")
+  {
+    var text='';
+    for(i=0;i<numStates-1;i++)
+    {
+      text = text + "#start"+i+",";
+    }
+    text = text + "#start"+(numStates-1);
+  }
+  return text;
+}
+
+
+
 
 function createTable(nrow,ncol,containerName,tableName,width,height,prefix,fontsize){
   var table = document.createElement("table");
