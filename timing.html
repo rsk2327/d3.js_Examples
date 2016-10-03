@@ -51,8 +51,9 @@ var e = d3.interval(tickFn,5000);
 
 var selector=0;
 
-function tickFn()
+function tickFn(ads)
 {
+  console.log(ads);
   console.log("entered tickFn at"+ d3.now());
 
 if(selector==0)

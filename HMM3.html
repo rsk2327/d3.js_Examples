@@ -226,38 +226,53 @@ tip.selectAll("text").data([1]).enter().append("text").text("outside").attr("fon
 
 ///////// ANIMATION ///////////
 
-//var internalClock = d3.interval(tickFn,animationSpeed);
+var internalClock = d3.interval(tickFn,1000);
 
 
-var currRow=1,
-	currCol=1;
-	
-function updateValues(currRow,currCol)
+
+var currRow=0,
+    currCol=0,
+    seqSelect=0;
+
+
+function nextCell()
 {
 
-	seqTable.rows[currRow].cells[currCol].innerHTML = currRow + " " + currCol;
-
-
+  if(currRow== numStates)
+  {
+    currRow = 1;
+    if(currCol== obsLength)
+    { currCol = 1;
+      currRow = 1;
+      internalClock.stop();
+      console.log("stopped")
+      }
+    else
+    {  currCol +=1; }
+  }else
+  { currRow += 1; }
 
 }
 
+
 function tickFn()
 {
-	console.log("Hi");
-	updateValues(currRow,currCol);
-	if(currRow== numStates)
-	{
-		currRow = 1;
-		if(currCol== obsLength)
-		{ currCol = 1;
-		  currRow = 1;
-		  internalClock.stop();
-		  console.log("stopped")
-			}
-		else
-		{  currCol +=1; }
-	}else
-	{ currRow += 1; }
+	if(seqSelect==0)
+  { 
+      nextCell();
+      seqSelect += 1;
+      internalClock.restart(tickFn,3000);
+  }else if(seqSelect==1)
+  {
+
+    
+  }
+
+  
+
+
+	
+	
 }
 
 
