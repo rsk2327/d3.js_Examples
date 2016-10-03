@@ -230,8 +230,8 @@ var internalClock = d3.interval(tickFn,1000);
 
 
 
-var currRow=0,
-    currCol=0,
+var currRow=1,
+    currCol=1,
     seqSelect=0;
 
 
@@ -259,20 +259,48 @@ function tickFn()
 {
 	if(seqSelect==0)
   { 
-      nextCell();
+	  console.log("seqSelect0");
       seqSelect += 1;
-      internalClock.restart(tickFn,3000);
+      internalClock.restart(tickFn,2000);
   }else if(seqSelect==1)
-  {
-
+  {//select seqTable box
+	console.log("seqSelect1");
+	seqTable.rows[currRow].cells[currCol].bgColor="orange";
+	seqSelect +=1;
+	internalClock.restart(tickFn,2000);
     
+  }else if(seqSelect ==2)
+  {//select prob boxes
+  
+    console.log("seqSelect2");
+	if(currCol==1)
+	{
+	  emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "orange";
+	  seqSelect += 1;
+	  internalClock.restart(tickFn,2000);
+	
+	}else
+	{
+	
+	}
+  
+  }else if (seqSelect==3)
+  {//select lines
+	console.log("seqSelect3");
+	seqSelect+=1;
+	plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange");
+	internalClock.restart(tickFn,2000);
+  
+  }else
+  {
+  
+  console.log("seqSelect4");
+  seqSelect = 0;
+  nextCell();
+  
   }
-
   
 
-
-	
-	
 }
 
 
