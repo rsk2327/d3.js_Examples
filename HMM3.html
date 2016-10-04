@@ -71,8 +71,9 @@ padding : 200px;
     obsLength = obsSeq.length;
   
   var stateHeight = 0.35,numStates  =stateData.length,numObs = obsData.length,
-      obsHeight = 0.6,selected = 0,splitRatio = 30,animationSpeed = 1000,
-	  startHeight = 0.1;
+      obsHeight = 0.6,selected = 0,splitRatio = 30,animationSpeed = 0.05,
+	  startHeight = 0.1,startProb = 1/stateData.length,enlargedStrokeWidth = 3.5,
+	  animationOn=0,stepMode=0;
     
   var emissionMat = [],transitionMat=[];
   
@@ -99,7 +100,7 @@ padding : 200px;
   
   header.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
   header.append("text").text("HMM").attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
-  .attr("y", function(d){ return header.select("rect").node().getBBox().height/2;});
+  .attr("y", function(d){ return header.select("rect").node().getBBox().height/1.5;});
   
   
 //// Summary & Plot 
@@ -120,9 +121,23 @@ padding : 200px;
   
   summary.append("text").attr("x",summaryWidth*0.5).attr("y",0.57*summaryHeight).attr("text-anchor","middle").attr("fill","black").text("TRANSITION PROBABILITIES");
   summary.append('foreignObject').attr("x",0).attr("y","60%").append("xhtml:body").attr("id","transitionBox");
+
+ 
 //// Footer     
+
 var footer = d3.select("body").append("svg").attr("width","100%")
                 .attr("height","25%").attr("id","footer").attr("margin-left",0);
+footer.append("g").attr("id","controlBar").attr("x",0).attr("y",0);
+footer.selectAll("g").append("rect").attr("x",0.2*summaryWidth).attr("y",0).attr("width",0.2*summaryWidth).attr("height",20).attr("id","prevStepButton").attr("fill","orange")
+																.attr("stroke-width",1).attr("stroke","white")
+																.on("click",stepBack);
+footer.selectAll("g").append("rect").attr("x",0.4*summaryWidth).attr("y",0).attr("width",0.2*summaryWidth).attr("height",20).attr("id","playButton").attr("fill","orange")
+																.attr("stroke-width",1).attr("stroke","white").
+																on("click",playAnimation);
+footer.selectAll("g").append("rect").attr("x",0.6*summaryWidth).attr("y",0).attr("width",0.2*summaryWidth).attr("height",20).attr("id","nextStepButton").attr("fill","orange")
+																.attr("stroke-width",1).attr("stroke","white")
+																.on("click",stepForward);
+
 footer.append('foreignObject').attr("x",summaryWidth).attr("y",0).append("xhtml:body").attr("id","footerBox");
   
 //// Text
@@ -190,11 +205,14 @@ plot.selectAll().data(startLinks).enter().append("line").attr("x1",function(d){ 
 
  //Adding node circles
 plot.selectAll().data(startData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
- .attr("id", function(d,i){ return "startNode";}).attr("fill","white").attr("stroke-width",5).attr("stroke","orange")
+ .attr("id", function(d,i){ return "startNode";}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
  .call(d3.drag()
     .on("start",dragStart)
     .on("drag",dragged)
-    .on("end", dragEnd));
+    .on("end", dragEnd))
+	.on("mouseenter",mouseoverCircle)
+	.on("mouseleave",mouseoutCircle)
+	.on("click",mouseCircleClick);
 	
 plot.selectAll().data(stateData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
   .attr("id", function(d,i){ return "state"+i;}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
@@ -226,13 +244,15 @@ tip.selectAll("text").data([1]).enter().append("text").text("outside").attr("fon
 
 ///////// ANIMATION ///////////
 
-var internalClock = d3.interval(tickFn,1000);
-
+var internalClock = d3.timeout(tickFn,1000*animationSpeed);
+internalClock.stop();
 
 
 var currRow=1,
     currCol=1,
-    seqSelect=0;
+    seqSelect=0,
+	seqSelect2=0,
+	currInnerRow=1;
 
 
 function nextCell()
@@ -259,42 +279,113 @@ function tickFn()
 {
 	if(seqSelect==0)
   { 
-	  console.log("seqSelect0");
+	//  console.log("seqSelect0");
       seqSelect += 1;
-      internalClock.restart(tickFn,2000);
+      if(stepMode==0){ internalClock.restart(tickFn,1); }
+	  else{internalClock.stop();}
+	  
   }else if(seqSelect==1)
   {//select seqTable box
-	console.log("seqSelect1");
+	//console.log("seqSelect1");
 	seqTable.rows[currRow].cells[currCol].bgColor="orange";
 	seqSelect +=1;
-	internalClock.restart(tickFn,2000);
+	if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
+	else{internalClock.stop();}
     
   }else if(seqSelect ==2)
   {//select prob boxes
   
-    console.log("seqSelect2");
+   // console.log("seqSelect2");
 	if(currCol==1)
 	{
 	  emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "orange";
 	  seqSelect += 1;
-	  internalClock.restart(tickFn,2000);
-	
+	  if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
+	  else{internalClock.stop();}
 	}else
 	{
+		emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "orange";
+		
+		if(seqSelect2==0)
+		{
+			//console.log("seqSelect2-0");
+			seqSelect2 += 1;
+			if(stepMode==0){ internalClock.restart(tickFn,1); }
+			else{internalClock.stop();}
+		}else if(seqSelect2==1)
+		{
+			//console.log("seqSelect2-1");
+			seqTable.rows[currInnerRow].cells[currCol-1].bgColor="orange";
+			seqSelect2 += 1;
+			if(stepMode==0){  internalClock.restart(tickFn,2000*animationSpeed); }
+			else{internalClock.stop();}
+		}else if(seqSelect2==2)
+		{//selecting trans prob box
+			//console.log("seqSelect2-2");
+			transitionTable.rows[currInnerRow].cells[currRow].bgColor="orange";
+			seqSelect2 += 1;
+			if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
+			else{internalClock.stop();}
+		}else if(seqSelect2==3)
+		{//selecting paths and updating values
+			//console.log("seqSelect2-3");
+			seqSelect2 += 1;
+			plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange").attr("stroke-width",enlargedStrokeWidth);
+			
+			var updatedValue = parseFloat(seqTable.rows[currRow].cells[currCol].innerHTML) + 
+							   parseFloat(seqTable.rows[currInnerRow].cells[currCol-1].innerHTML)*
+							   parseFloat(emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].innerHTML)*
+							   parseFloat(transitionTable.rows[currInnerRow].cells[currRow].innerHTML);
+			seqTable.rows[currRow].cells[currCol].innerHTML = updatedValue.toPrecision(3);
+			
+			if(stepMode==0){ internalClock.restart(tickFn,3000*animationSpeed); }
+			else{internalClock.stop();}
+		}else
+		{
+		//resetting all changed properties
+		 transitionTable.rows[currInnerRow].cells[currRow].bgColor="white";
+		 seqTable.rows[currInnerRow].cells[currCol-1].bgColor="white";
+		 plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5);
+		 
+		 if(currInnerRow== numStates)
+		 {
+			currInnerRow = 1;
+			seqSelect+=1;
+			seqSelect2=0;
+			if(stepMode==0){  internalClock.restart(tickFn,2000*animationSpeed); }
+			else{internalClock.stop();}
+		 }else
+		 {
+			currInnerRow += 1;
+			seqSelect2 = 0;
+			if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
+			else{internalClock.stop();}
+		 }
+		}
 	
 	}
   
   }else if (seqSelect==3)
   {//select lines
-	console.log("seqSelect3");
+	//console.log("seqSelect3");
 	seqSelect+=1;
-	plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange");
-	internalClock.restart(tickFn,2000);
+	plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange")
+																				   .attr("stroke-width",enlargedStrokeWidth);
+	if(currCol==1)
+	{
+		seqTable.rows[currRow].cells[currCol].innerHTML  = startProb*emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].innerHTML;
+	}
+	
+	if(stepMode==0){ internalClock.restart(tickFn,3000*animationSpeed); }
+	else{internalClock.stop();}
   
   }else
   {
-  
-  console.log("seqSelect4");
+  //Resetting all changed properties
+  seqTable.rows[currRow].cells[currCol].bgColor="white";
+  emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "white";
+  plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5);
+  //console.log("seqSelect4");
   seqSelect = 0;
   nextCell();
   
