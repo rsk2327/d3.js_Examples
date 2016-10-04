@@ -103,16 +103,24 @@ function mouseoverCircle(){
     {
       var coords = [stateData[this.id[5]].x,stateData[this.id[5]].y];
       var name = stateData[this.id[5]].name;
-      var output = "State : "+name;
+	  var id = stateData[this.id[5]].id;
+      var output = "S"+id+" : "+name;
       var length = 6*(output.length);
       
-    }else
+    }else if(this.id.indexOf("obs")!=-1)
     {
       var coords  = [obsData[this.id[3]].x,obsData[this.id[3]].y];
       var name = obsData[this.id[3]].name;
-      var output = "Obs : "+name;
+	  var id = obsData[this.id[3]].id;
+      var output = "O"+id+" : "+name;
       var length = 6*(output.length);
-    }
+    }else
+	{
+	  var coords  = [startData[0].x,startData[0].y];
+      var output = "Start Node";
+      var length = 6*(output.length);
+	
+	}
     plot.append("rect").attr("x",coords[0]-length/2).attr("opacity",0.0).attr("fill","black").attr("id","tipRect").attr("width",length).attr("height",30).attr("y",coords[1]+20);
     plot.append("text").attr("x",coords[0]).attr("fill","white").attr("id","tipText").text(output).attr("y",coords[1]+40).attr("font-size",12).attr("text-anchor","middle");
     plot.select("#tipRect").transition().duration(200).attr("opacity",0.7);
@@ -127,10 +135,13 @@ function mouseoutCircle(){
       d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");
       
       
-    }else
+    }else if(this.id.indexOf("obs")!=-1)
     {
       d3.select(this).attr("fill","black");
-    }
+    }else
+	{
+	  d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");
+	}
 }
 
 
@@ -431,4 +442,35 @@ function selectTextGen(id)
     {
     //Obs node
     }
+}
+
+function playAnimation()
+{
+console.log(stepMode);
+	if(animationOn==0)
+	{
+		internalClock.restart(tickFn,1000*animationSpeed);
+		animationOn=1;
+	}else
+	{
+		internalClock.stop();
+		animationOn=0;
+	}
+
+
+}
+
+function stepBack()
+{
+	
+return 1;
+}
+
+function stepForward()
+{
+	console.log(stepMode);
+	stepMode = 1;
+	internalClock.restart(tickFn,2000*animationSpeed);
+	
+	
 }
