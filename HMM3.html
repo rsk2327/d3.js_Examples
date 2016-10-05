@@ -4,7 +4,7 @@
 <script type="text/javascript" src = "d3.min.js"></script>
 <script type="text/javascript" src = "helperFunctions.js"></script>
 <style  type = "text/css">
-//@import 'https://fonts.googleapis.com/css?family=Oswald';
+@import 'https://fonts.googleapis.com/css?family=Oswald:700|Raleway:900|Sansita+One';
 .active {
   stroke: #000;
   stroke-width: 2px;
@@ -83,7 +83,7 @@ padding : 200px;
   var stateHeight = 0.35,numStates  =stateData.length,numObs = obsData.length,
       obsHeight = 0.6,selected = 0,splitRatio = 30,animationSpeed = 0.05,
     startHeight = 0.1,startProb = 1/stateData.length,enlargedStrokeWidth = 3.5,
-    animationOn=0,stepMode=0,hideLines=1,currentVisible=[];
+    animationOn=0,stepMode=0,hideLines=0,currentVisible=[];
     
   var emissionMat = [],transitionMat=[];
   
@@ -109,7 +109,7 @@ padding : 200px;
   var header = d3.select("body").append("svg").attr("height","5%").attr("width","100%").attr("margin-left",0);
   
   header.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
-  header.append("text").text("Hidden Markov Models").attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
+  header.append("text").text("HIDDEN MARKOV MODELS").attr("font-family","raleway").attr("letter-spacing","1.5px").attr("font-size",20).attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
   .attr("y", function(d){ return header.select("rect").node().getBBox().height/1.5;});
   
   

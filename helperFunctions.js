@@ -562,7 +562,7 @@ function createSlider(min,max)
         .call(d3.drag()
                 .on("start",function()
                 {
-                  d3.select(this).attr("fill","orange");
+                  d3.select(this).attr("fill","orange").attr("stroke","black").attr("stroke-width",1.0);
 
                 })
                 .on("drag",function()
@@ -580,9 +580,17 @@ function createSlider(min,max)
                 })
                 .on("end", function()
                 {
-                    d3.select(this).attr("fill","gray");
+                    d3.select(this).attr("fill","gray").attr("stroke","#ccc").attr("stroke-width",0.3);
 
-                })); 
+                }))
+        .on("mouseenter",function()
+          {
+            d3.select(this).attr("fill","orange");
+          })
+        .on("mouseleave",function()
+          {
+            d3.select(this).attr("fill","gray");
+          }); 
 
   return;
 
