@@ -51,6 +51,16 @@ td {
 #divBox{
 padding : 200px;
 }
+
+.slider-tray {
+  border: solid 1px #ccc;
+  border-top-color: #aaa;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+
 }
 </style>
 </head>
@@ -73,7 +83,7 @@ padding : 200px;
   var stateHeight = 0.35,numStates  =stateData.length,numObs = obsData.length,
       obsHeight = 0.6,selected = 0,splitRatio = 30,animationSpeed = 0.05,
     startHeight = 0.1,startProb = 1/stateData.length,enlargedStrokeWidth = 3.5,
-    animationOn=0,stepMode=0,hideLines=1;
+    animationOn=0,stepMode=0,hideLines=1,currentVisible=[];
     
   var emissionMat = [],transitionMat=[];
   
@@ -99,7 +109,7 @@ padding : 200px;
   var header = d3.select("body").append("svg").attr("height","5%").attr("width","100%").attr("margin-left",0);
   
   header.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
-  header.append("text").text("HMM").attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
+  header.append("text").text("Hidden Markov Models").attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
   .attr("y", function(d){ return header.select("rect").node().getBBox().height/1.5;});
   
   
@@ -148,11 +158,16 @@ footer.append("foreignObject").attr("transform","translate("+0.5*summaryWidth+",
 	  .on("click",playAnimation);				 
 
 footer.append("foreignObject").attr("transform","translate("+0.7*summaryWidth+","+0.5*footerElement.height+")")
-      .append("xhtml:body").append("div").attr("id","nextStepButtonDiv")
+    .append("xhtml:body").append("div").attr("id","nextStepButtonDiv")
 	  .append("img").attr("src","play3.png").attr("width","16px").attr("height","12px")
 	  .on("click",stepForward);				 
 
-								
+// footer.append("foreignObject").attr("transform","translate("+0.4*summaryWidth+","+0.2*footerElement.height+")")
+//     .append("xhtml:body").append("div").append("form").attr("method","get").append("input").attr("type","range").attr("id","slider").attr("min",0.01).attr("max",2)
+//     .attr("value",1).attr("disabled","false");
+
+createSlider();
+sliderBar = document.getElementById("sliderBar");			
 
 footer.append('foreignObject').attr("x",summaryWidth).attr("y",3).append("xhtml:body").attr("id","footerBox");
   
@@ -335,11 +350,11 @@ function tickFn()
       if(stepMode==0){ internalClock.restart(tickFn,1); }
       else{internalClock.stop();}
     }else if(seqSelect2==1)
-    {
+    {//select incoming seqTable box
       
       seqTable.rows[currInnerRow].cells[currCol-1].bgColor="orange";
       seqSelect2 += 1;
-      if(stepMode==0){  internalClock.restart(tickFn,2000*animationSpeed); }
+      if(stepMode==0){  internalClock.restart(tickFn,1*animationSpeed); }
       else{internalClock.stop();}
     }else if(seqSelect2==2)
     {//selecting trans prob box
@@ -352,6 +367,9 @@ function tickFn()
     {//selecting paths and updating values
       
       seqSelect2 += 1;
+      currentVisible.push("#state"+(currInnerRow-1)+""+(currRow-1));
+      currentVisible.push("#obs"+(currRow-1)+""+(obsSeq[currCol-1]));
+
       plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange").attr("stroke-width",enlargedStrokeWidth).attr("opacity",1.0);
       
       var updatedValue = parseFloat(seqTable.rows[currRow].cells[currCol].innerHTML) + 
@@ -369,7 +387,8 @@ function tickFn()
      seqTable.rows[currInnerRow].cells[currCol-1].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
      plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5)
      .attr("opacity",hideLines==0?1.0:0.0);
-     
+     currentVisible=[];
+
      if(currInnerRow== numStates)
      {
       currInnerRow = 1;
@@ -392,6 +411,9 @@ function tickFn()
   {//select lines
   //console.log("seqSelect3");
   seqSelect+=1;
+  currentVisible.push("#start"+(currRow-1));
+  currentVisible.push("#obs"+(currRow-1)+""+(obsSeq[currCol-1]));
+
   plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange")
                                            .attr("stroke-width",enlargedStrokeWidth).attr("opacity",1.0);
   if(currCol==1)
@@ -409,7 +431,9 @@ function tickFn()
   emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = (currRow%2!=0)?"#F3EFEF":"white";
   plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5)
   .attr("opacity",hideLines==0?1.0:0.0);
+  currentVisible = [];
   //console.log("seqSelect4");
+
   seqSelect = 0;
   nextCell();
   

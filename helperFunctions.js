@@ -87,15 +87,37 @@ function selectTextGen(id){
     }
 }
 
-//// MOSUE FUNCTIONS
+//// MOUSE FUNCTIONS
+
+function getCurrentVisible()
+{
+  return currentVisible[0]+","+currentVisible[1];
+
+}
+
 function mouseSVGClick(d){
  
-      plot.selectAll("path,circle,line").attr("opacity",1.0);
-      selected = 0;
+ if(hideLines==1)
+ {
+    plot.selectAll("circle").attr("opacity",1.0);
+    plot.selectAll("path,line").attr("opacity",0.0);
+    plot.selectAll(getCurrentVisible()).attr("opacity",1.0);
+    selected = 0;
+ }else
+ {
+    plot.selectAll("path,circle,line").attr("opacity",1.0);
+    selected = 0;
+
+ }
+      
 }
 
 function mouseCircleClick(d){
     
+    if(animationOn==1)
+    {
+      return;
+    }
     if(selected==0)
     {
       selected=1;
@@ -449,11 +471,11 @@ function selectTextGen(id)
     {
       text = text + "#state"+stateID+i+",";
     }
-    for(i=0;i<numObs-1;i++)
+    for(i=0;i<numObs;i++)
     {
       text = text + "#obs"+stateID+i+",";
     }
-    text = text + "#obs"+stateID+(numObs-1);
+    text = text + "#start"+stateID;
     return text;
     }else
     {
@@ -520,3 +542,77 @@ function stepForward()
   internalClock.restart(tickFn,2000*animationSpeed);
  
 }
+
+
+function createSlider(min,max)
+{
+  var sliderWidth = 0.6*summaryWidth
+
+  var scale = d3.scaleLinear()
+                .domain([0,sliderWidth])
+                .range([0.001,1]);
+
+  footer.append("rect").attr("x",0.2*summaryWidth).attr("y",0.2*footerElement.height)
+        .attr("width",sliderWidth).attr("height",5).attr("id","sliderBar").attr("fill","#f0f0f0").attr("stroke","#ccc");
+  
+  
+
+  footer.append("circle").attr("cx",0.5*summaryWidth).attr("cy",0.2*footerElement.height + 0.5*document.getElementById("sliderBar").getBoundingClientRect().height)
+        .attr("r",7).attr("fill","gray").attr("stroke","black").attr("stroke-width",0.3)
+        .call(d3.drag()
+                .on("start",function()
+                {
+                  d3.select(this).attr("fill","orange");
+
+                })
+                .on("drag",function()
+                {
+                  var coords = d3.mouse(this);
+
+
+    
+                  if(coords[0]>= 0.2*summaryWidth & coords[0]<= 0.8*summaryWidth )
+                  {
+                    sliderOutput = scale(coords[0]-0.2*summaryWidth);
+                    animationSpeed = sliderOutput;
+                    d3.select(this).attr("cx",coords[0]);  
+                  }
+                })
+                .on("end", function()
+                {
+                    d3.select(this).attr("fill","gray");
+
+                })); 
+
+  return;
+
+}
+
+
+
+
+function slideDragStart()
+{
+  d3.select(this).attr("fill","orange");
+
+}
+
+function slideDragged()
+{
+  var coords = d3.mouse(this)
+  
+  if(coords[0]>= 0.2*summaryWidth & coords[0]<= 0.8*summaryWidth )
+  {
+    d3.select(this).attr("cx",coords[0]);  
+  }
+  
+
+}
+
+
+function slideDragEnd()
+{
+  d3.select(this).attr("fill","gray");
+
+}
+
