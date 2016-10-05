@@ -223,8 +223,10 @@ function createTable(nrow,ncol,containerName,tableName,width,height,prefix,fonts
   table.id = tableName;
   table.style.borderSpacing = 0;
   table.style.borderCollapse = "collapse";
-  table.style.width=width;
+  table.style.width=0.97*width;
   table.style.height = height;
+  //table.style.margin = "0px 0px 0px 0px";
+  //table.style.padding = "0px 0px 0px 0px ";
     //Adding rows
   for(var i =0;i<nrow;i++)
   {
