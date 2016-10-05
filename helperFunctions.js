@@ -41,14 +41,28 @@ function generateText(selector)
   }
 
 function positionLink(d){
-  var startPos = [stateData[d.source].x,stateData[d.source].y],
+
+  if(d.source==d.target)
+  {
+    var pos = [stateData[d.source].x,stateData[d.source].y];
+    var cp1 = [pos[0]-85,pos[1]-95];
+    var cp2 = [pos[0]+85,pos[1]-95];
+
+    return "M"+pos[0]+ "," + pos[1]+" C"+cp1[0]+","+cp1[1]+" "+
+    cp2[0]+","+cp2[1]+" "+pos[0]+","+pos[1];
+  
+  }else
+  {
+    var startPos = [stateData[d.source].x,stateData[d.source].y],
       endPos = [stateData[d.target].x,stateData[d.target].y];
-  var dx = startPos[0]-endPos[0],
+    var dx = startPos[0]-endPos[0],
     dy = startPos[1]-endPos[1],
     dr = Math.sqrt(dx*dx + dy*dy);
-  return "M" + startPos[0]+ "," + startPos[1]
+    return "M" + startPos[0]+ "," + startPos[1]
        + "A" + dr + "," + dr + " 0 0,1 "
        + endPos[0] + "," + endPos[1];
+
+  }
 }
 
 function selectTextGen(id){
@@ -103,7 +117,7 @@ function mouseoverCircle(){
     {
       var coords = [stateData[this.id[5]].x,stateData[this.id[5]].y];
       var name = stateData[this.id[5]].name;
-	  var id = stateData[this.id[5]].id;
+    var id = stateData[this.id[5]].id;
       var output = "S"+id+" : "+name;
       var length = 6*(output.length);
       
@@ -111,16 +125,16 @@ function mouseoverCircle(){
     {
       var coords  = [obsData[this.id[3]].x,obsData[this.id[3]].y];
       var name = obsData[this.id[3]].name;
-	  var id = obsData[this.id[3]].id;
+    var id = obsData[this.id[3]].id;
       var output = "O"+id+" : "+name;
       var length = 6*(output.length);
     }else
-	{
-	  var coords  = [startData[0].x,startData[0].y];
+  {
+    var coords  = [startData[0].x,startData[0].y];
       var output = "Start Node";
       var length = 6*(output.length);
-	
-	}
+  
+  }
     plot.append("rect").attr("x",coords[0]-length/2).attr("opacity",0.0).attr("fill","black").attr("id","tipRect").attr("width",length).attr("height",30).attr("y",coords[1]+20);
     plot.append("text").attr("x",coords[0]).attr("fill","white").attr("id","tipText").text(output).attr("y",coords[1]+40).attr("font-size",12).attr("text-anchor","middle");
     plot.select("#tipRect").transition().duration(200).attr("opacity",0.7);
@@ -139,9 +153,9 @@ function mouseoutCircle(){
     {
       d3.select(this).attr("fill","black");
     }else
-	{
-	  d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");
-	}
+  {
+    d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");
+  }
 }
 
 
@@ -383,6 +397,7 @@ function cleanTable(tableID,prefix){
     nrow = table.rows.length;
   
   document.getElementById(prefix+"Head "+ (nrow-1) + " 0").style.background="white";
+  document.getElementById(prefix+"Head "+ (nrow-1) + " 0").innerHTML="";
   
   for(i=0;i<nrow-1;i++)
   {
@@ -415,9 +430,9 @@ function getCenter2(selector){
      }
   }else
   {
-	var space = 0.8*plotWidth/(2);
-	startData[0].x  = startPos + space;
-	startData[0].y  = header.node().getBBox().height + startHeight*plotHeight;
+  var space = 0.8*plotWidth/(2);
+  startData[0].x  = startPos + space;
+  startData[0].y  = header.node().getBBox().height + startHeight*plotHeight;
   }
 }
 
@@ -447,30 +462,59 @@ function selectTextGen(id)
 function playAnimation()
 {
 console.log(stepMode);
-	if(animationOn==0)
-	{
-		internalClock.restart(tickFn,1000*animationSpeed);
-		animationOn=1;
-	}else
-	{
-		internalClock.stop();
-		animationOn=0;
-	}
+  stepMode=0;
+  if(animationOn==0)
+  {
+    internalClock.restart(tickFn,1000*animationSpeed);
+    animationOn=1;
+  }else
+  {
+    internalClock.stop();
+    animationOn=0;
+  }
 
 
 }
 
-function stepBack()
+function resetPlot()
 {
-	
-return 1;
+  internalClock.stop();
+  if(currCol==1)
+  {
+    
+    seqTable.rows[currRow].cells[currCol].bgColor=(currRow%2!=0)?"#F3EFEF":"white";
+    emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = (currRow%2!=0)?"#F3EFEF":"white";
+    plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5);  
+  }else
+  {
+    transitionTable.rows[currInnerRow].cells[currRow].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
+    emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = (currRow%2!=0)?"#F3EFEF":"white";
+     seqTable.rows[currInnerRow].cells[currCol-1].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
+     seqTable.rows[currRow].cells[currCol].bgColor=(currRow%2!=0)?"#F3EFEF":"white";
+     plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5);    
+
+  }
+
+  for(i=1;i<=numStates;i++)
+  {
+    for(j=1;j<=obsLength;j++)
+    {
+      seqTable.rows[i].cells[j].innerHTML = '0';
+    }
+  }
+
+  seqSelect=0;
+  seqSelect2=0;
+  currRow=1;
+  currCol=1;
+  currInnerRow=1;
+
 }
 
 function stepForward()
 {
-	console.log(stepMode);
-	stepMode = 1;
-	internalClock.restart(tickFn,2000*animationSpeed);
-	
-	
+  console.log(stepMode);
+  stepMode = 1;
+  internalClock.restart(tickFn,2000*animationSpeed);
+ 
 }
