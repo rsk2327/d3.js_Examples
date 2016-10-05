@@ -131,23 +131,28 @@ padding : 200px;
 var footer = d3.select("body").append("svg").attr("width","100%")
                 .attr("height","25%").attr("id","footer").attr("margin-left",0);
 
-footer.append("g").attr("id","controlBar").attr("x",0).attr("y",0);
+
 footerElement = document.getElementById("footer").getBoundingClientRect();
-footer.append("rect").attr("width",footerElement.width).attr("height",footerElement.height).attr("stroke","black")
+footer.append("rect").attr("width",footerElement.width).attr("height",0.08).attr("stroke","black")
                      .attr("stroke-width",1).attr("fill","none"); //borderline
 
 //// Control Buttons
-footer.selectAll("g").append("rect").attr("x",0.2*summaryWidth).attr("y",0.45*footerElement.height).attr("width",0.2*summaryWidth)
-                                    .attr("height",0.15*footerElement.height).attr("id","resetButton").attr("fill","orange").attr("stroke-width",1)
-                                    .attr("stroke","white").on("click",resetPlot);
+footer.append("foreignObject").attr("transform", "translate("+0.3*summaryWidth+","+0.5*footerElement.height+")" )
+      .append("xhtml:body").append("div").attr("id","stopButtonDiv")
+	  .append("img").attr("src","play1.png").attr("width","16px").attr("height","12px")
+	  .on("click",resetPlot);	
+								
+footer.append("foreignObject").attr("transform","translate("+0.5*summaryWidth+","+0.5*footerElement.height+")" )
+      .append("xhtml:body").append("div").attr("id","playButtonDiv")
+	  .append("img").attr("src","play2.png").attr("width","16px").attr("height","12px")
+	  .on("click",playAnimation);				 
 
-footer.selectAll("g").append("rect").attr("x",0.4*summaryWidth).attr("y",0.45*footerElement.height).attr("width",0.2*summaryWidth)
-                                    .attr("height",0.15*footerElement.height).attr("id","playButton").attr("fill","orange").attr("stroke-width",1)
-                                    .attr("stroke","white").on("click",playAnimation);
+footer.append("foreignObject").attr("transform","translate("+0.7*summaryWidth+","+0.5*footerElement.height+")")
+      .append("xhtml:body").append("div").attr("id","nextStepButtonDiv")
+	  .append("img").attr("src","play3.png").attr("width","16px").attr("height","12px")
+	  .on("click",stepForward);				 
 
-footer.selectAll("g").append("rect").attr("x",0.6*summaryWidth).attr("y",0.45*footerElement.height).attr("width",0.2*summaryWidth)
-                                    .attr("height",0.15*footerElement.height).attr("id","nextStepButton").attr("fill","orange").attr("stroke-width",1)
-                                    .attr("stroke","white").on("click",stepForward);
+								
 
 footer.append('foreignObject').attr("x",summaryWidth).attr("y",3).append("xhtml:body").attr("id","footerBox");
   
