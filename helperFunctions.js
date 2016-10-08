@@ -135,35 +135,30 @@ function mouseCircleClick(d){
 function mouseoverCircle(){
     d3.select(this).attr("fill","orange").attr("stroke","none");    
     var coords = d3.mouse(this);
-    if(this.id.indexOf("state")!=-1)
-    {
-      var coords = [stateData[this.id[5]].x,stateData[this.id[5]].y];
-      var name = stateData[this.id[5]].name;
-    var id = stateData[this.id[5]].id;
-      var output = "S"+id+" : "+name;
-      var length = 6*(output.length);
+    
+	if(this.id.length==6)
+	{
+		id = ""+this.id[4].toString()+""+this.id[5].toString();
+	}else
+	{
+		id = ""+this.id[4].toString();
+	}
+   var coords = [nodeData[id].x,nodeData[id].y];
+   //var name = stateData[id].name;
+   var id = nodeData[id].id;
+   var obs = (id-(id%numStates))/numStates,
+		state = id%numStates;
+   var output = " S"+state+" O"+obs+" ";
+   var length = 6*(output.length);
       
-    }else if(this.id.indexOf("obs")!=-1)
-    {
-      var coords  = [obsData[this.id[3]].x,obsData[this.id[3]].y];
-      var name = obsData[this.id[3]].name;
-    var id = obsData[this.id[3]].id;
-      var output = "O"+id+" : "+name;
-      var length = 6*(output.length);
-    }else
-  {
-    var coords  = [startData[0].x,startData[0].y];
-      var output = "Start Node";
-      var length = 6*(output.length);
-  
-  }
+   
     plot.append("rect").attr("x",coords[0]-length/2).attr("opacity",0.0).attr("fill","black").attr("id","tipRect").attr("width",length).attr("height",30).attr("y",coords[1]+20);
     plot.append("text").attr("x",coords[0]).attr("fill","white").attr("id","tipText").text(output).attr("y",coords[1]+40).attr("font-size",12).attr("text-anchor","middle");
     plot.select("#tipRect").transition().duration(200).attr("opacity",0.7);
 }
 
 function mouseoutCircle(){
-    console.log("triggered");
+  
     
     plot.selectAll("#tipRect,#tipText").remove();
     if(this.id.indexOf("state")!=-1)
@@ -460,6 +455,32 @@ function getCenter2(selector){
   }
 }
 
+function getCenter3()
+{
+	var spaceWidth = 0.9*plotWidth,
+		spaceHeight = 0.9*plotHeight,
+		startLeft = 0.05*plotWidth,
+		startTop = 0.05*plotHeight,
+		spaceLeft = spaceWidth/(obsLength+1),
+		spaceTop = spaceHeight/(numStates+1);
+		
+	for(i=0;i<numStates*obsLength;i++)
+	{
+		id = nodeData[i].id;
+		leftVar = (id-(id%numStates))/numStates;
+		topVar = id%numStates;
+		console.log(id);
+		//console.log(leftVar);
+		//console.log(topVar);
+		
+		nodeData[i].x = startLeft + (leftVar+1)*spaceLeft;
+		nodeData[i].y = startTop + (topVar+1)*spaceTop;
+	
+	}
+
+
+}
+
 function selectTextGen(id)
   {
     if(id.indexOf("state")!=-1)
@@ -550,7 +571,7 @@ function createSlider(min,max)
 
   var scale = d3.scaleLinear()
                 .domain([0,sliderWidth])
-                .range([0.001,1]);
+                .range([1,0.001]);
 
   footer.append("rect").attr("x",0.2*summaryWidth).attr("y",0.2*footerElement.height)
         .attr("width",sliderWidth).attr("height",5).attr("id","sliderBar").attr("fill","#f0f0f0").attr("stroke","#ccc");
