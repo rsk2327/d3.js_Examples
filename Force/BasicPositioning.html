@@ -30,6 +30,7 @@ var nodeData = [{'x':225,'y':100,'id':'First'}];
 var simulation = d3.forceSimulation(nodeData);
 simulation.force("xAxis",d3.forceX(width/2))
           .force("yAxis",d3.forceY(height/2));
+          
  var node = svg.selectAll("circle").data(nodeData)
             .enter().append("circle")
             .attr("r",30).attr("cx",width/2).attr("cy",height/2)

@@ -2,7 +2,7 @@
 <head>
 <title>HMM</title>
 <script type="text/javascript" src = "d3.min.js"></script>
-<script type="text/javascript" src = "helperFunctions.js"></script>
+<script type="text/javascript" src = "helperFunctions2.js"></script>
 <style  type = "text/css">
 @import 'https://fonts.googleapis.com/css?family=Oswald:700|Raleway:900|Sansita+One';
 .active {
@@ -61,6 +61,8 @@ padding : 200px;
 }
 
 
+
+
 }
 </style>
 </head>
@@ -76,14 +78,21 @@ padding : 200px;
                   {'name':"No Umbrella",'id':1,x:0,y:0,'type':"obs"},
                   {'name':"Coat",'id':2,x:0,y:0,'type':"obs"}];
   var startData = [{'name':"Start Node",'id':0,x:0,y:0,'type':"start node"}];
-          
-  var obsSeq = [0,1,2,1,2,1],
+  
+  var nodeData =[];
+
+  var obsSeq = [0,1,1,0,2,2],
     obsLength = obsSeq.length;
+
+  for(i=0;i<stateData.length*obsLength;i++)
+  {
+    nodeData.push( {id:i,x:0,y:0,bestPred:-1,bestPredValue:0.0,selected:0,staticx:0,staticy:0} );
+  }
   
   var stateHeight = 0.35,numStates  =stateData.length,numObs = obsData.length,
-      obsHeight = 0.6,selected = 0,splitRatio = 30,animationSpeed = 0.05,
+      obsHeight = 0.6,selected = 0,splitRatio = 30,animationSpeed = 0.01,
     startHeight = 0.1,startProb = 1/stateData.length,enlargedStrokeWidth = 3.5,
-    animationOn=0,stepMode=0,hideLines=0,currentVisible=[];
+    animationOn=0,stepMode=0,hideLines=0,currentVisible=[],finalMaxValState=-1;
     
   var emissionMat = [],transitionMat=[];
   
@@ -105,11 +114,23 @@ padding : 200px;
     }
   }
  
+emissionMat=[[0.1,0.2,0.7],
+             [0.4,0.4,0.2],
+             [0.3,0.4,0.3],
+             [0.1,0.1,0.8],
+             [0.7,0.1,0.2]];
+
+transitionMat = [[0.2,0.2,0.1,0.1,0.4],
+                  [0.2,0.2,0.5,0.1,0.1],
+                  [0.6,0.1,0.1,0.1,0.1],
+                  [0.2,0.3,0.1,0.2,0.2],
+                  [0.3,0.1,0.1,0.1,0.4]];
+
 //// Header     
   var header = d3.select("body").append("svg").attr("height","5%").attr("width","100%").attr("margin-left",0);
   
   header.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
-  header.append("text").text("HIDDEN MARKOV MODELS").attr("font-family","raleway").attr("letter-spacing","1.5px").attr("font-size",20).attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
+  header.append("text").text("HIDDEN MARKOV MODELS | Viterbi Algorithm").attr("font-family","raleway").attr("letter-spacing","1.5px").attr("font-size",20).attr("fill","white").attr("x",function(d){ return header.select("rect").node().getBBox().x + 15; })
   .attr("y", function(d){ return header.select("rect").node().getBBox().height/1.5;});
   
   
@@ -147,19 +168,19 @@ footer.append("rect").attr("width",footerElement.width).attr("height",0.08).attr
                      .attr("stroke-width",1).attr("fill","none"); //borderline
 
 //// Control Buttons
-footer.append("foreignObject").attr("transform", "translate("+0.3*summaryWidth+","+0.5*footerElement.height+")" )
+footer.append("foreignObject").attr("transform", "translate("+0.2*summaryWidth+","+0.5*footerElement.height+")" )
       .append("xhtml:body").append("div").attr("id","stopButtonDiv")
-	  .append("img").attr("src","play1.png").attr("width","16px").attr("height","12px")
+	  .append("img").attr("src","stop1.png").attr("width",0.19*summaryWidth)
 	  .on("click",resetPlot);	
 								
-footer.append("foreignObject").attr("transform","translate("+0.5*summaryWidth+","+0.5*footerElement.height+")" )
+footer.append("foreignObject").attr("transform","translate("+0.4*summaryWidth+","+0.5*footerElement.height+")" )
       .append("xhtml:body").append("div").attr("id","playButtonDiv")
-	  .append("img").attr("src","play2.png").attr("width","16px").attr("height","12px")
+	  .append("img").attr("id","playButton").attr("src","play1.png").attr("width",0.19*summaryWidth)
 	  .on("click",playAnimation);				 
 
-footer.append("foreignObject").attr("transform","translate("+0.7*summaryWidth+","+0.5*footerElement.height+")")
+footer.append("foreignObject").attr("transform","translate("+0.6*summaryWidth+","+0.5*footerElement.height+")")
     .append("xhtml:body").append("div").attr("id","nextStepButtonDiv")
-	  .append("img").attr("src","play3.png").attr("width","16px").attr("height","12px")
+	  .append("img").attr("src","step1.png").attr("width",0.19*summaryWidth)
 	  .on("click",stepForward);				 
 
 // footer.append("foreignObject").attr("transform","translate("+0.4*summaryWidth+","+0.2*footerElement.height+")")
@@ -172,10 +193,51 @@ sliderBar = document.getElementById("sliderBar");
 footer.append('foreignObject').attr("x",summaryWidth).attr("y",3).append("xhtml:body").attr("id","footerBox");
   
 //// Text
-var descrip = d3.select("body").append("svg").attr("width","100%")
-                .attr("height","100%").attr("id","footer").attr("margin-left",0); 
-descrip.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
+var descript = d3.select("body").append("svg").attr("width","100%")
+                .attr("height","100%").attr("id","descriptBox").attr("margin-left",0); 
+
+descript.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange");
+
+var div = descript.append('foreignObject').append("xhtml:body").attr("id","box");
+descriptWidth = document.getElementById("descriptBox").getBoundingClientRect().width,
+descriptHeight = document.getElementById("descriptBox").getBoundingClientRect().height;
+
+div.append("h2").attr("y",50).attr("id","pbox0").style("margin-left",0.05*descriptWidth).style("margin-right",0.05*descriptWidth).style("width",0.9*descriptWidth)
+  .style("color","white").style("margin-top",0.15*descriptHeight).attr("y",50)
+.text("|").attr("fill","white");
+
+div.append("h2").attr("y",50).attr("id","pbox").style("margin-left",0.05*descriptWidth).style("margin-right",0.05*descriptWidth).style("width",0.9*descriptWidth)
+  .style("color","white").style("margin-top",0.15*descriptHeight).attr("y",50)
+.text("  Viterbi Algorithm  ").attr("fill","white");
+
+
+
+div.append("p").attr("y",50).attr("id","pbox2").style("margin-left",0.05*descriptWidth).style("margin-right",0.05*descriptWidth).style("width",0.9*descriptWidth)
+  .style("color","white").style("margin-top",0.05*descriptHeight).attr("y",10)
+.text(" The second problem associated with Hidden Markov Models is task of finding the most probable sequence of states given an observation \
+sequence. This problem is solved using a dynamic programming approach, utilizing the Markov property, by the Viterbi algorithm.").attr("fill","white");
+
+// descrip.append("rect").attr("width","100%").attr("height","100%").attr("fill","orange").attr("id","textBoxRect");
+
+// descrip.append("text").attr("x",15).attr("y",0.10*descrip.select("rect").node().getBBox().height)
+// .text("Viterbi Algorithm").attr("font-size",40).attr("fill","white");
+
+// descrip.append("text").attr("x",15).attr("y",0.15*descrip.select("rect").node().getBBox().height)
+// .text("The second problem of Hidden Markov Models is that given "+
+//   "a sequence of observations, what is the most likely sequence of hidden states that led to the observation sequence.")
+// .attr("fill","white");
+
+// descrip.select("rect").append("foreignObject").attr("transform","translate("+10+","+15+")").append("xhtml:body").append("div").append("p").attr("text","The second problem of Hidden Markov Models is that given "+
+//   "a sequence of observations, what is the most likely sequence of hidden states that led to the observation sequence");
   
+// var descript = d3.select("body").append("div").attr("id","box").attr("width","100%").attr("height","100%").style("background","orange");
+// descript.append("svg").append("rect").attr("width","100%").attr("height","100%").attr("fill","orange").attr("id","textBoxRect");
+
+// descript.append("p").attr("id","pbox").text("Hello there I wanted to know if you guys wanted to go to the theatre. you guys wanted to go to the theatre\
+//    you guys wanted to go to the theatre  you guys wanted to go to the theatre  you guys wanted to go to the theatre\
+//     you guys wanted to go to the theatre  you guys wanted to go to the theatre  you guys wanted to go to the theatre\
+//     ").style("margin-left",60).style("margin-top",60).style("margin-right",60);
+
   
 //Creating sequence table
 createTable(numStates,obsLength,containerName='footerBox',tableName = "seqTable",width=plotWidth,
@@ -193,50 +255,33 @@ var seqTable = document.getElementById("seqTable"), emissionTable = document.get
   
 ////////// LINKS AND NODES //////////////////
 
-getCenter2("states");
-getCenter2("obs");
-getCenter2("startNode");
-var stateLinks=[],
-  obsLinks=[],
-  startLinks=[];
-for(i=0;i<numStates;i++)
-{
-    for(j=0;j<numStates;j++)
-    {
-      stateLinks.push({source:i,target:j,id:"state"+i+j});
-    }
-}
-for(i=0;i<numStates;i++)
-{
-   for(j=0;j<numObs;j++)
-   {
-      obsLinks.push({source:i,target:j,id:"obs"+i+j});
-   }
-}
+getCenter3();
+
+var stateLinks=[];
 
 for(i=0;i<numStates;i++)
 {
-   startLinks.push({source:0,target:i,id:"start"+i});
+  for(j=0;j<numStates;j++)
+  {
+    for(k=0;k<obsLength-1;k++)
+    {
+      startnode = k*numStates + i;
+      endnode = (k+1)*numStates + j;
+      stateLinks.push( {'source':startnode, 'target': endnode, id : "state_"+startnode+"_"+endnode,'distance':10});
+    }
+  }
 }
+
 
 // state links
-plot.selectAll().data(stateLinks)
-  .enter().append("path").attr("stroke","black").attr("stroke-width",0.5)
-  .attr("fill-opacity",0.0).attr("d",positionLink).attr("id",function(d){ return d.id;});
-
-// obs links
-plot.selectAll().data(obsLinks).enter().append("line").attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;})
-  .attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;}).attr("stroke","black").attr("stroke-width",0.5).attr("stroke-dasharray","5,5")
-  .attr("id",function(d){ return d.id;});
-
-// start node links
-plot.selectAll().data(startLinks).enter().append("line").attr("x1",function(d){ return stateData[d.target].x ;}).attr("y1",function(d){ return stateData[d.target].y;})
-  .attr("x2",function(d){ return startData[d.source].x; }).attr("y2",function(d){ return startData[d.source].y ;}).attr("stroke","black").attr("stroke-width",0.5)
-  .attr("id",function(d){ return d.id;});
+var lines = plot.selectAll().data(stateLinks).enter().append("line").attr("x1",function(d){ return nodeData[d.source].x ;})
+                .attr("y1",function(d){ return nodeData[d.source].y ;}).attr("x2",function(d){ return nodeData[d.target].x ;})
+                .attr("y2",function(d){ return nodeData[d.target].y ;}).attr("stroke","black").attr("stroke-width",0.5)
+                .attr("stroke-dasharray","5,5").attr("id",function(d){ return d.id;});
 
  //Adding node circles
-plot.selectAll().data(startData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
- .attr("id", function(d,i){ return "startNode";}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
+var node = plot.selectAll().data(nodeData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
+ .attr("id", function(d,i){ return "node"+d.id;}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
  .call(d3.drag()
     .on("start",dragStart)
     .on("drag",dragged)
@@ -245,25 +290,6 @@ plot.selectAll().data(startData).enter().append("circle").attr("r",20).attr("cx"
   .on("mouseleave",mouseoutCircle)
   .on("click",mouseCircleClick);
   
-plot.selectAll().data(stateData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
-  .attr("id", function(d,i){ return "state"+i;}).attr("fill","white").attr("stroke-width",3).attr("stroke","black")
-  .call(d3.drag()
-    .on("start",dragStart)
-    .on("drag",dragged)
-    .on("end", dragEnd))
-  .on("mouseenter",mouseoverCircle)
-  .on("mouseleave",mouseoutCircle)
-  .on("click",mouseCircleClick);
-  
-plot.selectAll().data(obsData).enter().append("circle").attr("r",20).attr("cx",function(d){ return d.x;}).attr("cy",function(d){ return d.y;})
-  .attr("id", function(d,i){ return "obs"+i;})
-  .call(d3.drag()
-    .on("start",dragStart)
-    .on("drag",dragged)
-    .on("end", dragEnd))
-  .on("mouseenter",mouseoverCircle)
-  .on("mouseleave",mouseoutCircle)
-  .on("click",mouseCircleClick);
 
 var tip = plot.append("g").attr("id","tip").attr("opacity",0.0);
 tip.selectAll("rect").data([1]).enter().append("rect").attr("width",60).attr("height",40)
@@ -292,24 +318,7 @@ var currRow=1,
   currInnerRow=1;
 
 
-function nextCell()
-{
 
-  if(currRow== numStates)
-  {
-    currRow = 1;
-    if(currCol== obsLength)
-    { currCol = 1;
-      currRow = 1;
-      internalClock.stop();
-      console.log("stopped")
-      }
-    else
-    {  currCol +=1; }
-  }else
-  { currRow += 1; }
-
-}
 
 
 function tickFn()
@@ -324,124 +333,228 @@ function tickFn()
   }else if(seqSelect==1)
   {//select seqTable box
   
-  seqTable.rows[currRow].cells[currCol].bgColor="orange";
-  seqSelect +=1;
-  if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
-  else{internalClock.stop();}
+    seqTable.rows[currRow].cells[currCol].bgColor="orange";
+    seqSelect +=1;
+    if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }else{internalClock.stop();}
     
   }else if(seqSelect ==2)
   {//select prob boxes
   
-   
-  if(currCol==1)
-  {
-    emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "orange";
-    seqSelect += 1;
-    if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
-    else{internalClock.stop();}
-  }else
-  {
-    emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "orange";
-    
-    if(seqSelect2==0)
+    if(currCol==1)
     {
-      
-      seqSelect2 += 1;
-      if(stepMode==0){ internalClock.restart(tickFn,1); }
-      else{internalClock.stop();}
-    }else if(seqSelect2==1)
-    {//select incoming seqTable box
-      
-      seqTable.rows[currInnerRow].cells[currCol-1].bgColor="orange";
-      seqSelect2 += 1;
-      if(stepMode==0){  internalClock.restart(tickFn,1*animationSpeed); }
-      else{internalClock.stop();}
-    }else if(seqSelect2==2)
-    {//selecting trans prob box
-      
-      transitionTable.rows[currInnerRow].cells[currRow].bgColor="orange";
-      seqSelect2 += 1;
-      if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
-      else{internalClock.stop();}
-    }else if(seqSelect2==3)
-    {//selecting paths and updating values
-      
-      seqSelect2 += 1;
-      currentVisible.push("#state"+(currInnerRow-1)+""+(currRow-1));
-      currentVisible.push("#obs"+(currRow-1)+""+(obsSeq[currCol-1]));
+      emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "orange";
+      endnode = currRow-1;
+      plot.select("#node"+endnode).attr('stroke',"orange").attr("fill","white").attr("stroke-width",6.0);
 
-      plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange").attr("stroke-width",enlargedStrokeWidth).attr("opacity",1.0);
-      
-      var updatedValue = parseFloat(seqTable.rows[currRow].cells[currCol].innerHTML) + 
-                 parseFloat(seqTable.rows[currInnerRow].cells[currCol-1].innerHTML)*
-                 parseFloat(emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].innerHTML)*
-                 parseFloat(transitionTable.rows[currInnerRow].cells[currRow].innerHTML);
-      seqTable.rows[currRow].cells[currCol].innerHTML = updatedValue.toPrecision(3);
-      
-      if(stepMode==0){ internalClock.restart(tickFn,3000*animationSpeed); }
-      else{internalClock.stop();}
+      seqSelect += 1;
+      if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }else{internalClock.stop();}
+
     }else
     {
-    //resetting all changed properties
-     transitionTable.rows[currInnerRow].cells[currRow].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
-     seqTable.rows[currInnerRow].cells[currCol-1].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
-     plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5)
-     .attr("opacity",hideLines==0?1.0:0.0);
-     currentVisible=[];
+      emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = "orange";
+      endnode = ((currCol-1)*numStates + (currRow-1));
+      plot.select("#node"+endnode).attr('stroke',"orange").attr("fill","white").attr("stroke-width",6.0);
 
-     if(currInnerRow== numStates)
-     {
-      currInnerRow = 1;
+        if(seqSelect2==0)
+        {
+          
+          seqSelect2 += 1;
+          if(stepMode==0){ internalClock.restart(tickFn,1); }else{internalClock.stop();}
+
+        }else if(seqSelect2==1)
+        {//select incoming seqTable box
+          
+          console.log("seqSelect2==1_",currInnerRow)
+          ;
+          seqTable.rows[currInnerRow].cells[currCol-1].bgColor="orange";
+          seqSelect2 += 1;
+          if(stepMode==0){  internalClock.restart(tickFn,1*animationSpeed); }else{internalClock.stop();}
+
+        }else if(seqSelect2==2)
+        {//selecting trans prob box
+          console.log("seqSelect2==2_",currInnerRow);
+          transitionTable.rows[currInnerRow].cells[currRow].bgColor="orange";
+          seqSelect2 += 1;
+          if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }else{internalClock.stop();}
+
+        }else if(seqSelect2==3)
+        {//selecting paths and updating values
+          console.log("seqSelect2==3_",currInnerRow);
+          seqSelect2 += 1;
+          currentVisible.push("#state"+(currInnerRow-1)+""+(currRow-1));
+          currentVisible.push("#obs"+(currRow-1)+""+(obsSeq[currCol-1]));
+
+          startnode = ((currCol-2)*numStates + (currInnerRow-1));
+          
+          
+          plot.selectAll("#state_"+startnode+"_"+endnode).attr("stroke","orange").attr("stroke-width",enlargedStrokeWidth).attr("opacity",1.0);
+          plot.select("#node"+startnode).attr('stroke',"orange").attr("fill","white").attr("stroke-width",6.0);
+          
+
+          newVal =  parseFloat(seqTable.rows[currInnerRow].cells[currCol-1].innerHTML)*
+                    parseFloat(emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].innerHTML)*
+                    parseFloat(transitionTable.rows[currInnerRow].cells[currRow].innerHTML);
+          console.log(startnode,endnode,newVal,nodeData[endnode],currInnerRow);
+
+          if (newVal >= nodeData[endnode].bestPredValue)
+          {
+            nodeData[endnode].bestPredValue = newVal;
+            nodeData[endnode].bestPred = startnode;
+          }
+
+          outputVal = nodeData[endnode].bestPredValue;
+        
+          
+          if(outputVal.toString().length>=6)
+          {
+            outputVal = parseFloat(outputVal).toExponential(3);
+          }else
+          {
+            outputVal = outputVal.toPrecision(3);
+          }
+          
+
+          seqTable.rows[currRow].cells[currCol].innerHTML = outputVal+"| S"+(nodeData[endnode].bestPred%numStates);
+          
+          if(stepMode==0){ internalClock.restart(tickFn,3000*animationSpeed); }else{internalClock.stop();}
+
+        }else
+        {
+          //resetting all changed properties
+          console.log("seqSelect2==4");
+           transitionTable.rows[currInnerRow].cells[currRow].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
+           seqTable.rows[currInnerRow].cells[currCol-1].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
+           plot.selectAll("#state_"+startnode+"_"+endnode).attr("stroke","black").attr("stroke-width",0.5).attr("opacity",hideLines==0?1.0:0.0);
+           
+        if(nodeData[startnode].selected==1)
+        {
+          plot.select("#node"+startnode).attr("stroke","black").attr("fill","black").attr("stroke-width",3.0);
+        }else
+        {
+          plot.select("#node"+startnode).attr('stroke',"black").attr("fill","white").attr("stroke-width",3.0);
+        }
+
+         currentVisible=[];
+
+         if(currInnerRow== numStates)
+         {
+          currInnerRow = 1;
+          seqSelect+=1;
+          seqSelect2=0;
+          if(stepMode==0){  internalClock.restart(tickFn,2000*animationSpeed); }else{internalClock.stop();}
+
+         }else
+         {
+          currInnerRow += 1;
+          seqSelect2 = 0;
+          if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }else{internalClock.stop();}
+
+         }
+        }
+      
+      }
+    
+    }else if (seqSelect==3)
+    {
+      //select lines
+      //console.log("seqSelect3");
       seqSelect+=1;
-      seqSelect2=0;
-      if(stepMode==0){  internalClock.restart(tickFn,2000*animationSpeed); }
-      else{internalClock.stop();}
-     }else
-     {
-      currInnerRow += 1;
-      seqSelect2 = 0;
-      if(stepMode==0){ internalClock.restart(tickFn,2000*animationSpeed); }
-      else{internalClock.stop();}
-     }
+      currentVisible.push("#start"+(currRow-1));
+      currentVisible.push("#obs"+(currRow-1)+""+(obsSeq[currCol-1]));
+
+      if(currCol==1)
+      {
+        seqTable.rows[currRow].cells[currCol].innerHTML  = (startProb*emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].innerHTML).toPrecision(3);
+        nodeData[(currCol-1)*numStates+ (currRow-1)].bestPredValue = (startProb*emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].innerHTML).toPrecision(3);
+      }
+      
+      if(stepMode==0){ internalClock.restart(tickFn,3000*animationSpeed); }else{internalClock.stop();}
+    
+    }else
+    {
+      //Resetting all changed properties
+      seqTable.rows[currRow].cells[currCol].bgColor=(currRow%2!=0)?"#F3EFEF":"white";
+      emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = (currRow%2!=0)?"#F3EFEF":"white";
+      plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5)
+      .attr("opacity",hideLines==0?1.0:0.0);
+      plot.select("#node"+endnode).attr('stroke',"black").attr("fill","white").attr("stroke-width",3.0);
+
+      currentVisible = [];
+      //console.log("seqSelect4");
+
+      seqSelect = 0;
+      nextCell();
+    
     }
-  
-  }
-  
-  }else if (seqSelect==3)
-  {//select lines
-  //console.log("seqSelect3");
-  seqSelect+=1;
-  currentVisible.push("#start"+(currRow-1));
-  currentVisible.push("#obs"+(currRow-1)+""+(obsSeq[currCol-1]));
-
-  plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","orange")
-                                           .attr("stroke-width",enlargedStrokeWidth).attr("opacity",1.0);
-  if(currCol==1)
-  {
-    seqTable.rows[currRow].cells[currCol].innerHTML  = startProb*emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].innerHTML;
-  }
-  
-  if(stepMode==0){ internalClock.restart(tickFn,3000*animationSpeed); }
-  else{internalClock.stop();}
-  
-  }else
-  {
-  //Resetting all changed properties
-  seqTable.rows[currRow].cells[currCol].bgColor=(currRow%2!=0)?"#F3EFEF":"white";
-  emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = (currRow%2!=0)?"#F3EFEF":"white";
-  plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5)
-  .attr("opacity",hideLines==0?1.0:0.0);
-  currentVisible = [];
-  //console.log("seqSelect4");
-
-  seqSelect = 0;
-  nextCell();
-  
-  }
-  
 
 }
 
+//Force simulation
+nodeLinks = [];
+
+for(i=0;i<numStates;i++)
+{
+  for(j=0;j<obsLength-1;j++)
+  {
+    startnode = j*numStates + i;
+    endnode = (j+1)*numStates + i;
+    nodeLinks.push({'source':startnode, 'target': endnode,'distance':10});
+  }
+}
+
+for(i=0;i<numStates-1;i++)
+{
+  for(j=0;j<obsLength;j++)
+  {
+    startnode = j*numStates + i;
+    endnode =  j*numStates + i+1;
+    nodeLinks.push({'source':startnode, 'target': endnode,'distance':10});
+  }
+}
+
+//down-right
+for(i=0;i<numStates-1;i++)
+{
+  for(j=0;j<obsLength-1;j++)
+  {
+    startnode = j*numStates + i;
+    endnode =  (j+1)*numStates + i+1;
+    nodeLinks.push({'source':startnode, 'target': endnode,'distance':14.14});
+  }
+}
+
+//down-left
+for(i=0;i<numStates-1;i++)
+{
+  for(j=obsLength-1;j>=1;j--)
+  {
+    startnode = j*numStates + i;
+    endnode =  (j-1)*numStates + i+1;
+    nodeLinks.push({'source':startnode, 'target': endnode,'distance':14.14});
+  }
+}
+
+var collisionForce = d3.forceCollide(35).strength(2).iterations(100);
+var linkForce  = d3.forceLink(nodeLinks).distance(dist).strength(0.8);
+var simulation = d3.forceSimulation(nodeData).alphaDecay(0.001).force("collisionForce",collisionForce)
+                                                                .force("xForce",d3.forceX().x(function(d){ return d.staticx;}))
+                                                                .force("yForce",d3.forceY().y(function(d){ return d.staticy;}));
+
+function dist(d)
+{
+  return d.distance+100;
+}
+
+function ticked(){    
+  node.attr("cx", function(d){ return d.x;})
+  .attr("cy", function(d){ return d.y;})
+
+  lines.attr("x1",function(d){ return nodeData[d.source].x ;}).attr("y1",function(d){ return nodeData[d.source].y ;})
+       .attr("x2",function(d){ return nodeData[d.target].x ;}).attr("y2",function(d){ return nodeData[d.target].y ;});
+}
+
+  simulation.nodes(nodeData);
+  simulation.on("tick",ticked);
 
 
 </script>

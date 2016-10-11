@@ -92,7 +92,6 @@ function selectTextGen(id){
 function getCurrentVisible()
 {
   return currentVisible[0]+","+currentVisible[1];
-
 }
 
 function mouseSVGClick(d){
@@ -133,23 +132,25 @@ function mouseCircleClick(d){
 }
 
 function mouseoverCircle(){
-    d3.select(this).attr("fill","orange").attr("stroke","none");    
-    var coords = d3.mouse(this);
+
+  d3.select(this).attr("fill","orange").attr("stroke","none");    
+  var coords = d3.mouse(this);
     
-	if(this.id.length==6)
-	{
-		id = ""+this.id[4].toString()+""+this.id[5].toString();
-	}else
-	{
-		id = ""+this.id[4].toString();
-	}
-   var coords = [nodeData[id].x,nodeData[id].y];
-   //var name = stateData[id].name;
-   var id = nodeData[id].id;
-   var obs = (id-(id%numStates))/numStates,
-		state = id%numStates;
-   var output = " S"+state+" O"+obs+" ";
-   var length = 6*(output.length);
+  	if(this.id.length==6)
+  	{
+  		id = ""+this.id[4].toString()+""+this.id[5].toString();
+  	}else
+  	{
+  		id = ""+this.id[4].toString();
+  	}
+
+     var coords = [nodeData[id].x,nodeData[id].y];
+     //var name = stateData[id].name;
+     var id = nodeData[id].id;
+     var obs = (id-(id%numStates))/numStates,
+  		state = id%numStates;
+     var output = " S"+state+" O"+obs+" ";
+     var length = 6*(output.length);
       
    
     plot.append("rect").attr("x",coords[0]-length/2).attr("opacity",0.0).attr("fill","black").attr("id","tipRect").attr("width",length).attr("height",30).attr("y",coords[1]+20);
@@ -161,60 +162,69 @@ function mouseoutCircle(){
   
     
     plot.selectAll("#tipRect,#tipText").remove();
-    if(this.id.indexOf("state")!=-1)
+    if(this.id.length==6)
     {
-      d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");
-      
-      
-    }else if(this.id.indexOf("obs")!=-1)
-    {
-      d3.select(this).attr("fill","black");
+      id = ""+this.id[4].toString()+""+this.id[5].toString();
     }else
-  {
-    d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");
-  }
+    {
+      id = ""+this.id[4].toString();
+    }
+    
+    if(nodeData[id].selected==0)
+    {
+      d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","white");  
+    }else
+    {
+      d3.select(this).attr("stroke-width",3).attr("stroke","black").attr("fill","black");  
+    }
+    
+    
+  
 }
 
 
 //// DRAG FUNCTIONS
 function dragStart(d){
-    if(selected==1){return;}
+    //if(selected==1){return;}
     d3.select(this).attr("opacity",0.5);
+    simulation.restart();
+    simulation.alpha(0.7);
+
+    d.fx = d.x;
+    d.fy = d.y;
 }
 
 function dragged(d){
     if(selected==1){return;}
     var coords = d3.mouse(this);
 
-    if(d.type == "obs")
+    if(this.id.length==6)
     {
-      obsData[d.id].x = coords[0];
-      obsData[d.id].y = coords[1];
-      d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
-      plot.selectAll("line").data(obsLinks).attr("x2",function(d){ return obsData[d.target].x ;}).attr("y2",function(d){ return obsData[d.target].y ;});
-    }else if (d.type =="state")
-    {
-      stateData[d.id].x = coords[0];
-      stateData[d.id].y = coords[1];
-      d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
-      plot.selectAll("path").data(stateLinks).attr("d",positionLink);
-      plot.selectAll("line").data(obsLinks).attr("x1",function(d){ return stateData[d.source].x ;}).attr("y1",function(d){ return stateData[d.source].y ;});
-      plot.selectAll(selectStartLines("startNode")).data(startLinks).attr("x1",function(d){ return stateData[d.target].x; })
-                                                                    .attr("y1",function(d){ return stateData[d.target].y; });
+      id = ""+this.id[4].toString()+""+this.id[5].toString();
     }else
     {
-      startData[d.id].x = coords[0];
-      startData[d.id].y = coords[1];
-      d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
-      plot.selectAll(selectStartLines("startNode")).data(startLinks).attr("x2",function(d){ return startData[d.source].x ;}).attr("y2",function(d){ return startData[d.source].y ;});
-
+      id = ""+this.id[4].toString();
     }
+
     
+
+    nodeData[id].x = coords[0];
+    nodeData[id].y = coords[1];
+    d3.select(this).attr("cx",coords[0]).attr("cy",coords[1]);
+    plot.selectAll("line").data(stateLinks).attr("x1",function(d){ return nodeData[d.source].x ;}).attr("y1",function(d){ return nodeData[d.source].y ;})
+                                           .attr("x2",function(d){ return nodeData[d.target].x ;}).attr("y2",function(d){ return nodeData[d.target].y ;});
+
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+  
 }
 
 function dragEnd(d){
-    if(selected==1){return;}
-    d3.select(this).attr("opacity",1.0);    
+    //if(selected==1){return;}
+    d3.select(this).attr("opacity",1.0);   
+    d.fx = null;
+    d.fy = null;
+    simulation.alphaTarget(0.1); 
 }
 
 function selectStartLines(selector)
@@ -475,6 +485,8 @@ function getCenter3()
 		
 		nodeData[i].x = startLeft + (leftVar+1)*spaceLeft;
 		nodeData[i].y = startTop + (topVar+1)*spaceTop;
+    nodeData[i].staticx = startLeft + (leftVar+1)*spaceLeft;
+    nodeData[i].staticy = startTop + (topVar+1)*spaceTop;
 	
 	}
 
@@ -504,40 +516,57 @@ function selectTextGen(id)
     }
 }
 
+
 function playAnimation()
 {
-console.log(stepMode);
+
   stepMode=0;
   if(animationOn==0)
   {
+    d3.select("#playButton").attr("src","pause1.png");
     internalClock.restart(tickFn,1000*animationSpeed);
     animationOn=1;
   }else
   {
+    d3.select("#playButton").attr("src","play1.png");
     internalClock.stop();
     animationOn=0;
   }
-
-
 }
 
 function resetPlot()
 {
   internalClock.stop();
+  d3.select("#playButton").attr("src","play1.png");
+
+
   if(currCol==1)
   {
     
     seqTable.rows[currRow].cells[currCol].bgColor=(currRow%2!=0)?"#F3EFEF":"white";
     emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = (currRow%2!=0)?"#F3EFEF":"white";
-    plot.selectAll("#start"+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5);  
+    resetSelections();
   }else
   {
     transitionTable.rows[currInnerRow].cells[currRow].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
     emissionTable.rows[currRow].cells[obsSeq[currCol-1]+1].bgColor = (currRow%2!=0)?"#F3EFEF":"white";
-     seqTable.rows[currInnerRow].cells[currCol-1].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
-     seqTable.rows[currRow].cells[currCol].bgColor=(currRow%2!=0)?"#F3EFEF":"white";
-     plot.selectAll("#state"+(currInnerRow-1)+""+(currRow-1)+",#obs"+(currRow-1)+""+(obsSeq[currCol-1])).attr("stroke","black").attr("stroke-width",0.5);    
+    seqTable.rows[currInnerRow].cells[currCol-1].bgColor=(currInnerRow%2!=0)?"#F3EFEF":"white";
+    seqTable.rows[currRow].cells[currCol].bgColor=(currRow%2!=0)?"#F3EFEF":"white";
+    resetSelections();
 
+  }
+  if(finalMaxValState!=-1)
+  {
+    highlightSol(finalMaxValState,1);  
+    finalMaxValState = -1;
+  }
+  
+
+  for(i=0;i<numStates*obsLength;i++)
+  {
+    nodeData[i].bestPred=-1;
+    nodeData[i].bestPredValue =0.0;
+    nodeData[i].selected =0;
   }
 
   for(i=1;i<=numStates;i++)
@@ -547,6 +576,7 @@ function resetPlot()
       seqTable.rows[i].cells[j].innerHTML = '0';
     }
   }
+
 
   seqSelect=0;
   seqSelect2=0;
@@ -558,22 +588,23 @@ function resetPlot()
 
 function stepForward()
 {
-  console.log(stepMode);
+  
   stepMode = 1;
   internalClock.restart(tickFn,2000*animationSpeed);
  
 }
 
 
+
 function createSlider(min,max)
 {
   var sliderWidth = 0.6*summaryWidth
 
-  var scale = d3.scaleLinear()
+  var speedScale = d3.scaleLinear()
                 .domain([0,sliderWidth])
                 .range([1,0.001]);
 
-  footer.append("rect").attr("x",0.2*summaryWidth).attr("y",0.2*footerElement.height)
+  footer.append("rect").attr("x",0.22*summaryWidth).attr("y",0.2*footerElement.height)
         .attr("width",sliderWidth).attr("height",5).attr("id","sliderBar").attr("fill","#f0f0f0").attr("stroke","#ccc");
   
   
@@ -592,9 +623,9 @@ function createSlider(min,max)
 
 
     
-                  if(coords[0]>= 0.2*summaryWidth & coords[0]<= 0.8*summaryWidth )
+                  if(coords[0]>= 0.2*summaryWidth & coords[0]<= (0.2*summaryWidth+sliderWidth) )
                   {
-                    sliderOutput = scale(coords[0]-0.2*summaryWidth);
+                    sliderOutput = speedScale(coords[0]-0.2*summaryWidth);
                     animationSpeed = sliderOutput;
                     d3.select(this).attr("cx",coords[0]);  
                   }
@@ -612,6 +643,8 @@ function createSlider(min,max)
           {
             d3.select(this).attr("fill","gray");
           }); 
+
+  animationSpeed = speedScale(0.5*sliderWidth);
 
   return;
 
@@ -645,3 +678,166 @@ function slideDragEnd()
 
 }
 
+function nextCell()
+{
+
+  if(currRow== numStates)
+  {
+    currRow = 1;
+    if(currCol== obsLength)
+    { 
+
+      resetSelections();
+
+      var maxVal = 0,maxValState=0;
+
+      for(i=0;i<numStates;i++)
+      {
+        if( nodeData[(currCol-1)*numStates + i].bestPredValue>maxVal )
+        {
+          maxVal = nodeData[(currCol-1)*numStates + i].bestPredValue;
+          maxValState = (currCol-1)*numStates + i;
+        }
+      }
+      predecessor = nodeData[maxValState].bestPred;
+
+      d3.select("#node"+maxValState).attr("fill","black");
+      d3.select("#state_"+ predecessor+"_"+maxValState).attr("stroke","black").attr("stroke-width",3.0);
+      nodeData[maxValState].selected=1;
+
+      backTrack(predecessor);
+      finalMaxValState = maxValState;
+
+      currCol = 1;
+      currRow = 1;
+      internalClock.stop();
+      console.log("stopped")
+
+      d3.select("#playButton").attr("src","play1.png");
+      d3.timeout(highlightSolUtil,1000); //highlighting the final solution
+
+      }
+    else if (currCol == 1)
+    {  
+      //reached last row of first column
+      currCol +=1; 
+      var maxVal = 0,maxValState=0;
+
+      for(i=0;i<numStates;i++)
+      {
+        if(nodeData[i].bestPredValue>maxVal)
+        {
+          maxVal = nodeData[i].bestPredValue;
+          maxValState = i;
+        }
+      }
+
+      d3.select("#node"+maxValState).attr("fill","black");
+      nodeData[maxValState].selected=1;
+   
+    }else
+    {
+      //reached last row of column
+      
+      resetSelections();
+
+      var maxVal = 0,maxValState=0;
+
+      for(i=0;i<numStates;i++)
+      {
+        if( nodeData[(currCol-1)*numStates + i].bestPredValue>maxVal )
+        {
+          maxVal = nodeData[(currCol-1)*numStates + i].bestPredValue;
+          maxValState = (currCol-1)*numStates + i;
+        }
+      }
+      predecessor = nodeData[maxValState].bestPred;
+
+      d3.select("#node"+maxValState).attr("fill","black");
+      d3.select("#state_"+ predecessor+"_"+maxValState).attr("stroke","black").attr("stroke-width",3.0);
+      nodeData[maxValState].selected=1;
+    
+      backTrack(predecessor);
+      currCol += 1;
+
+    }
+  }else
+  {
+    currRow += 1; 
+  }
+
+}
+
+function highlightSolUtil()
+{
+  highlightSol(finalMaxValState,0);
+}
+
+function highlightSol(nodeID,remove)
+{ 
+
+  console.log(nodeID);
+  predID = nodeData[nodeID].bestPred;
+  col = (nodeID-(nodeID%numStates))/numStates;
+  row = nodeID%numStates;
+
+
+  if(col==0)
+  {
+    if(remove==0)
+    {
+      d3.select("#node"+nodeID).attr("stroke","orange").attr("fill","orange"); 
+      seqTable.rows[row+1].cells[col+1].bgColor="orange";    
+    }else
+    {
+      d3.select("#node"+nodeID).attr("stroke","black").attr("fill","white"); 
+      seqTable.rows[row+1].cells[col+1].bgColor=(row%2==0)?"#F3EFEF":"white";
+    }
+    
+  }else
+  {
+    if(remove==0)
+    {
+      d3.select("#node"+nodeID).attr("stroke","orange").attr("fill","orange");
+      d3.select("#state_"+predID+"_"+nodeID).attr("stroke","orange");
+      seqTable.rows[row+1].cells[col+1].bgColor="orange";    
+      highlightSol(predID,remove);
+    }else
+    {
+      d3.select("#node"+nodeID).attr("stroke","black").attr("fill","white");
+      d3.select("#state_"+predID+"_"+nodeID).attr("stroke","black");
+      seqTable.rows[row+1].cells[col+1].bgColor=(row%2==0)?"#F3EFEF":"white";    
+      highlightSol(predID,remove);
+    }
+    
+  }
+}
+
+function resetSelections()
+{
+  
+  for(i=0;i<numStates*obsLength;i++){ nodeData[i].selected=0;}
+  plot.selectAll("line").attr("stroke","black").attr("stroke-width",0.5);
+  plot.selectAll("circle").attr("fill","white").attr("stroke","black").attr("stroke-width",3.0);
+}
+
+function backTrack(id)
+{
+  col = (id-(id%numStates))/numStates;
+
+  if(col==0)
+  {
+
+    d3.select("#node"+id).attr("fill","black");
+    nodeData[id].selected=1;
+  
+  }else
+  {
+    predecessor = nodeData[id].bestPred;
+
+    d3.select("#node"+id).attr("fill","black");
+    d3.select("#state_"+ predecessor+"_"+id).attr("stroke","black").attr("stroke-width",3.0);
+    nodeData[id].selected=1;
+    backTrack(predecessor);
+  }
+}
