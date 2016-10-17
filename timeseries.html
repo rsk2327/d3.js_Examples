@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>Bar Chart</title>
+<script type="text/javascript" src = "https://d3js.org/d3.v4.min.js"></script>
+<style  type = "text/css">
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+.links line {
+  stroke: #aaa;
+}
+.nodes circle {
+  pointer-events: all;
+  stroke: none;
+  stroke-width: 40px;
+}
+</style>
+
+</head>
+<body>
+<script>
+  
+var margin = {top: 20, right: 20, bottom: 110, left: 40},
+    margin2 = {top: 430, right: 20, bottom: 30, left: 40};
+var width = 1000 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom,
+    height2 = 600 - margin2.top - margin2.bottom;
+var svg = d3.select("body").append("svg").attr("width",width)
+            .attr("height",height);
+
+
+
+var parseData = d3.timeParse("%b %Y");
+
+var x = d3.scaleTime().range([0,width]),
+    x2 = d3.scaleTime().range([0,width]),
+    y = d3.scaleTime().range([height,0]),
+    y2 = d3.scaleTime().range([height2,0]);
+
+
+var xAxis= d3.axisBottom(x),
+    xAxis2 = d3.axisBottom(x2),
+    yAxis= d3.axisLeft(y);
+
+var brush = d3.brushX().extent([0,0],[width,height2]);
+
+svg.append("rect").attr("width","100%").attr("height","100%").attr("fill","blue")
+.on;
+ 
+
+</script>
+
+
+</body>
+</html>
