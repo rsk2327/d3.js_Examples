@@ -485,14 +485,16 @@ function selectTextGen(id)
 
 function playAnimation()
 {
-console.log(stepMode);
+
   stepMode=0;
   if(animationOn==0)
   {
+    d3.select('#playButton').attr("src","pause1.png");
     internalClock.restart(tickFn,1000*animationSpeed);
     animationOn=1;
   }else
   {
+    d3.select("#playButton").attr("src","play1.png");
     internalClock.stop();
     animationOn=0;
   }
@@ -550,7 +552,7 @@ function createSlider(min,max)
 
   var scale = d3.scaleLinear()
                 .domain([0,sliderWidth])
-                .range([0.001,1]);
+                .range([1,0.001]);
 
   footer.append("rect").attr("x",0.2*summaryWidth).attr("y",0.2*footerElement.height)
         .attr("width",sliderWidth).attr("height",5).attr("id","sliderBar").attr("fill","#f0f0f0").attr("stroke","#ccc");
@@ -571,7 +573,7 @@ function createSlider(min,max)
 
 
     
-                  if(coords[0]>= 0.2*summaryWidth & coords[0]<= 0.8*summaryWidth )
+                  if(coords[0]>= 0.2*summaryWidth & coords[0]<= (0.2*summaryWidth + sliderWidth) )
                   {
                     sliderOutput = scale(coords[0]-0.2*summaryWidth);
                     animationSpeed = sliderOutput;
@@ -592,6 +594,7 @@ function createSlider(min,max)
             d3.select(this).attr("fill","gray");
           }); 
 
+  animationSpeed  = scale(0.5*sliderWidth);
   return;
 
 }

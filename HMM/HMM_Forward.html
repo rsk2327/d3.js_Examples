@@ -147,19 +147,19 @@ footer.append("rect").attr("width",footerElement.width).attr("height",0.08).attr
                      .attr("stroke-width",1).attr("fill","none"); //borderline
 
 //// Control Buttons
-footer.append("foreignObject").attr("transform", "translate("+0.3*summaryWidth+","+0.5*footerElement.height+")" )
+footer.append("foreignObject").attr("transform", "translate("+0.2*summaryWidth+","+0.5*footerElement.height+")" )
       .append("xhtml:body").append("div").attr("id","stopButtonDiv")
-	  .append("img").attr("src","play1.png").attr("width","16px").attr("height","12px")
+	  .append("img").attr("src","stop1.png").attr("width",0.19*summaryWidth)
 	  .on("click",resetPlot);	
 								
-footer.append("foreignObject").attr("transform","translate("+0.5*summaryWidth+","+0.5*footerElement.height+")" )
+footer.append("foreignObject").attr("transform","translate("+0.4*summaryWidth+","+0.5*footerElement.height+")" )
       .append("xhtml:body").append("div").attr("id","playButtonDiv")
-	  .append("img").attr("src","play2.png").attr("width","16px").attr("height","12px")
+	  .append("img").attr("id","playButton").attr("src","play1.png").attr("width",0.19*summaryWidth)
 	  .on("click",playAnimation);				 
 
-footer.append("foreignObject").attr("transform","translate("+0.7*summaryWidth+","+0.5*footerElement.height+")")
+footer.append("foreignObject").attr("transform","translate("+0.6*summaryWidth+","+0.5*footerElement.height+")" )
     .append("xhtml:body").append("div").attr("id","nextStepButtonDiv")
-	  .append("img").attr("src","play3.png").attr("width","16px").attr("height","12px")
+	  .append("img").attr("src","step1.png").attr("width",0.19*summaryWidth)
 	  .on("click",stepForward);				 
 
 // footer.append("foreignObject").attr("transform","translate("+0.4*summaryWidth+","+0.2*footerElement.height+")")
